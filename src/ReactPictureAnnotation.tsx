@@ -1,4 +1,4 @@
-import React, { MouseEventHandler } from "react";
+import React, { MouseEventHandler, TouchEventHandler } from "react";
 import { IAnnotation } from "./Annotation";
 import { IAnnotationState } from "./annotation/AnnotationState";
 import { DefaultAnnotationState } from "./annotation/DefaultAnnotationState";
@@ -15,6 +15,7 @@ interface IReactPictureAnnotationProps {
   width: number;
   height: number;
   image: string;
+  mode: "pan" | "annotate";
   inputElement: (
     value: string,
     onChange: (value: string) => void,
@@ -82,6 +83,12 @@ export default class ReactPictureAnnotation extends React.Component<
     this
   );
   private scaleState = defaultState;
+  private startDrag?: {
+    x: number;
+    y: number;
+    originX: number;
+    originY: number;
+  } = undefined;
 
   public componentDidMount = () => {
     const currentCanvas = this.canvasRef.current;
@@ -159,6 +166,9 @@ export default class ReactPictureAnnotation extends React.Component<
           onMouseMove={this.onMouseMove}
           onMouseUp={this.onMouseUp}
           onMouseLeave={this.onMouseLeave}
+          onTouchStart={this.onTouchStart}
+          onTouchEnd={this.onTouchEnd}
+          onTouchMove={this.onTouchMove}
           onWheel={this.onWheel}
         />
         {showInput && (
@@ -364,25 +374,91 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   private onMouseDown: MouseEventHandler<HTMLCanvasElement> = event => {
+    const { mode } = this.props;
     const { offsetX, offsetY } = event.nativeEvent;
     const { positionX, positionY } = this.calculateMousePosition(
       offsetX,
       offsetY
     );
-    this.currentAnnotationState.onMouseDown(positionX, positionY);
+    if (mode === "annotate") {
+      this.currentAnnotationState.onMouseDown(positionX, positionY);
+    } else {
+      const { originX, originY } = this.scaleState;
+      this.startDrag = { x: offsetX, y: offsetY, originX, originY };
+    }
   };
 
   private onMouseMove: MouseEventHandler<HTMLCanvasElement> = event => {
+    const { mode } = this.props;
     const { offsetX, offsetY } = event.nativeEvent;
     const { positionX, positionY } = this.calculateMousePosition(
       offsetX,
       offsetY
     );
-    this.currentAnnotationState.onMouseMove(positionX, positionY);
+    if (mode === "annotate") {
+      this.currentAnnotationState.onMouseMove(positionX, positionY);
+    } else if (this.startDrag) {
+      this.scaleState.originX =
+        this.startDrag.originX + (offsetX - this.startDrag.x);
+      this.scaleState.originY =
+        this.startDrag.originY + (offsetY - this.startDrag.y);
+
+      this.setState({ imageScale: this.scaleState });
+
+      requestAnimationFrame(() => {
+        this.onShapeChange();
+        this.onImageChange();
+      });
+    }
   };
 
   private onMouseUp: MouseEventHandler<HTMLCanvasElement> = () => {
     this.currentAnnotationState.onMouseUp();
+    this.startDrag = undefined;
+  };
+
+  private onTouchStart: TouchEventHandler<HTMLCanvasElement> = event => {
+    const { mode } = this.props;
+    const { clientX, clientY } = event.touches[0];
+    const { positionX, positionY } = this.calculateMousePosition(
+      clientX,
+      clientY
+    );
+    if (mode === "annotate") {
+      this.currentAnnotationState.onMouseDown(positionX, positionY);
+    } else {
+      const { originX, originY } = this.scaleState;
+      this.startDrag = { x: clientX, y: clientY, originX, originY };
+    }
+  };
+
+  private onTouchMove: TouchEventHandler<HTMLCanvasElement> = event => {
+    const { mode } = this.props;
+    const { clientX, clientY } = event.touches[0];
+    const { positionX, positionY } = this.calculateMousePosition(
+      clientX,
+      clientY
+    );
+    if (mode === "annotate") {
+      this.currentAnnotationState.onMouseMove(positionX, positionY);
+    } else if (this.startDrag) {
+      this.scaleState.originX =
+        this.startDrag.originX + (clientX - this.startDrag.x);
+      this.scaleState.originY =
+        this.startDrag.originY + (clientY - this.startDrag.y);
+
+      this.setState({ imageScale: this.scaleState });
+
+      requestAnimationFrame(() => {
+        this.onShapeChange();
+        this.onImageChange();
+      });
+    }
+  };
+
+  private onTouchEnd: TouchEventHandler<HTMLCanvasElement> = () => {
+    this.currentAnnotationState.onMouseUp();
+    this.startDrag = undefined;
   };
 
   private onMouseLeave: MouseEventHandler<HTMLCanvasElement> = () => {
