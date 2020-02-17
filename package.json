@@ -12,7 +12,8 @@
     "commit": "npx git-cz",
     "precommit": "lint-staged",
     "lib:publish": "npm run build && npm publish",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "deploy-storybook": "storybook-to-ghpages"
   },
   "repository": {
     "type": "git",
@@ -83,6 +84,7 @@
     "typescript": "^3.5.1"
   },
   "dependencies": {
+    "@storybook/storybook-deployer": "^2.8.1",
     "prop-types": "^15.7.2",
     "reselect": "^4.0.0",
     "warning": "^4.0.3"
