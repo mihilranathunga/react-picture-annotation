@@ -20,12 +20,7 @@ export interface IShapeBase {
   height: number;
 }
 
-export interface IShapeAdjustBase {
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-}
+export interface IShapeAdjustBase extends Partial<IShapeBase> {}
 
 export interface IShapeData extends IShapeBase {
   type: string;

@@ -7,7 +7,7 @@ export default class CreatingAnnotationState implements IAnnotationState {
   constructor(context: ReactPictureAnnotation) {
     this.context = context;
   }
-  public onMouseDown = () => undefined;
+  public onMouseDown = () => false;
   public onMouseMove = (positionX: number, positionY: number) => {
     const { shapes } = this.context;
     if (shapes.length > 0) {

@@ -10,7 +10,61 @@ addDecorator(storyFn => <div>{storyFn()}</div>);
 
 storiesOf("Hello World", module)
   .addDecorator(withA11y)
-  .add("with text", () => {
+  .add("Panning", () => {
+    const AnnotationComponent = () => {
+      const [size, setSize] = useState({
+        width: window.innerWidth - 16,
+        height: window.innerHeight - 16
+      });
+
+      const [annotationData, setAnnotationData] = useState<
+        Array<IAnnotation<IShapeData>>
+      >([
+        {
+          id: "a",
+          comment: "Hello World",
+          mark: {
+            type: "RECT",
+            width: 161,
+            height: 165,
+            x: 229,
+            y: 92
+          }
+        }
+      ]);
+
+      const [selectedId, setSelectedId] = useState<string | null>("a");
+
+      const onResize = () => {
+        setSize({
+          width: window.innerWidth - 16,
+          height: window.innerHeight - 16
+        });
+      };
+
+      useEffect(() => {
+        window.addEventListener("resize", onResize);
+        return () => {
+          window.removeEventListener("resize", onResize);
+        };
+      }, []);
+
+      return (
+        <ReactPictureAnnotation
+          width={size.width}
+          height={size.height}
+          annotationData={annotationData}
+          onChange={data => setAnnotationData(data)}
+          selectedId={selectedId}
+          onSelect={e => setSelectedId(e)}
+          image="https://bequank.oss-cn-beijing.aliyuncs.com/landpage/large/60682895_p0_master1200.jpg"
+        />
+      );
+    };
+
+    return <AnnotationComponent />;
+  })
+  .add("Add Annotation", () => {
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
         width: window.innerWidth - 16,
@@ -57,6 +111,7 @@ storiesOf("Hello World", module)
           onChange={data => setAnnotationData(data)}
           selectedId={selectedId}
           onSelect={e => setSelectedId(e)}
+          editable={true}
           image="https://bequank.oss-cn-beijing.aliyuncs.com/landpage/large/60682895_p0_master1200.jpg"
         />
       );

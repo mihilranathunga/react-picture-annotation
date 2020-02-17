@@ -1,11 +1,13 @@
 import React, { MouseEventHandler, TouchEventHandler } from "react";
 import { IAnnotation } from "./Annotation";
 import { IAnnotationState } from "./annotation/AnnotationState";
+import CreatingAnnotationState from "./annotation/CreatingAnnotationState";
 import { DefaultAnnotationState } from "./annotation/DefaultAnnotationState";
 import DefaultInputSection from "./DefaultInputSection";
 // import DeleteButton from "./DeleteButton";
 import { IShape, IShapeBase, RectShape, shapeStyle } from "./Shape";
 import Transformer, { ITransformer } from "./Transformer";
+import randomId from "./utils/randomId";
 
 interface IReactPictureAnnotationProps {
   annotationData?: IAnnotation[];
@@ -15,7 +17,7 @@ interface IReactPictureAnnotationProps {
   width: number;
   height: number;
   image: string;
-  mode: "pan" | "annotate";
+  editable: boolean;
   inputElement: (
     value: string,
     onChange: (value: string) => void,
@@ -58,7 +60,8 @@ export default class ReactPictureAnnotation extends React.Component<
         onChange={onChange}
         onDelete={onDelete}
       />
-    )
+    ),
+    editable: false
   };
 
   public shapes: IShape[] = [];
@@ -89,6 +92,7 @@ export default class ReactPictureAnnotation extends React.Component<
     originX: number;
     originY: number;
   } = undefined;
+  private lastPinchLength?: number;
 
   public componentDidMount = () => {
     const currentCanvas = this.canvasRef.current;
@@ -374,14 +378,20 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   private onMouseDown: MouseEventHandler<HTMLCanvasElement> = event => {
-    const { mode } = this.props;
+    const { editable } = this.props;
     const { offsetX, offsetY } = event.nativeEvent;
     const { positionX, positionY } = this.calculateMousePosition(
       offsetX,
       offsetY
     );
-    if (mode === "annotate") {
-      this.currentAnnotationState.onMouseDown(positionX, positionY);
+    const hasHighlightedShape = this.currentAnnotationState.onMouseDown(
+      positionX,
+      positionY
+    );
+    if (editable) {
+      if (!hasHighlightedShape) {
+        this.createNewAnnotation(positionX, positionY);
+      }
     } else {
       const { originX, originY } = this.scaleState;
       this.startDrag = { x: offsetX, y: offsetY, originX, originY };
@@ -389,13 +399,13 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   private onMouseMove: MouseEventHandler<HTMLCanvasElement> = event => {
-    const { mode } = this.props;
+    const { editable } = this.props;
     const { offsetX, offsetY } = event.nativeEvent;
     const { positionX, positionY } = this.calculateMousePosition(
       offsetX,
       offsetY
     );
-    if (mode === "annotate") {
+    if (editable) {
       this.currentAnnotationState.onMouseMove(positionX, positionY);
     } else if (this.startDrag) {
       this.scaleState.originX =
@@ -418,47 +428,103 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   private onTouchStart: TouchEventHandler<HTMLCanvasElement> = event => {
-    const { mode } = this.props;
+    const { editable } = this.props;
     const { clientX, clientY } = event.touches[0];
     const { positionX, positionY } = this.calculateMousePosition(
       clientX,
       clientY
     );
-    if (mode === "annotate") {
-      this.currentAnnotationState.onMouseDown(positionX, positionY);
+
+    const hasHighlightedShape = this.currentAnnotationState.onMouseDown(
+      positionX,
+      positionY
+    );
+    if (editable) {
+      if (!hasHighlightedShape && editable) {
+        this.createNewAnnotation(positionX, positionY);
+      }
     } else {
-      const { originX, originY } = this.scaleState;
-      this.startDrag = { x: clientX, y: clientY, originX, originY };
+      const { touches } = event;
+      if (touches.length === 2) {
+        this.lastPinchLength = getPinchLength(touches);
+      } else if (touches.length === 1) {
+        this.lastPinchLength = undefined;
+        const { originX, originY } = this.scaleState;
+        this.startDrag = { x: clientX, y: clientY, originX, originY };
+      }
     }
+
+    // suppress viewport scaling on iOS
+    tryCancelEvent(event);
   };
 
   private onTouchMove: TouchEventHandler<HTMLCanvasElement> = event => {
-    const { mode } = this.props;
+    const { editable } = this.props;
     const { clientX, clientY } = event.touches[0];
     const { positionX, positionY } = this.calculateMousePosition(
       clientX,
       clientY
     );
-    if (mode === "annotate") {
+    if (editable) {
       this.currentAnnotationState.onMouseMove(positionX, positionY);
-    } else if (this.startDrag) {
-      this.scaleState.originX =
-        this.startDrag.originX + (clientX - this.startDrag.x);
-      this.scaleState.originY =
-        this.startDrag.originY + (clientY - this.startDrag.y);
+    } else {
+      const { touches } = event;
+      if (touches.length === 2) {
+        this.handlePinchChange(touches);
+      } else if (touches.length === 1) {
+        if (this.startDrag) {
+          this.scaleState.originX =
+            this.startDrag.originX + (clientX - this.startDrag.x);
+          this.scaleState.originY =
+            this.startDrag.originY + (clientY - this.startDrag.y);
 
-      this.setState({ imageScale: this.scaleState });
+          this.setState({ imageScale: this.scaleState });
 
-      requestAnimationFrame(() => {
-        this.onShapeChange();
-        this.onImageChange();
-      });
+          requestAnimationFrame(() => {
+            this.onShapeChange();
+            this.onImageChange();
+          });
+        }
+      }
     }
+
+    // suppress viewport scaling on iOS
+    tryCancelEvent(event);
   };
 
   private onTouchEnd: TouchEventHandler<HTMLCanvasElement> = () => {
     this.currentAnnotationState.onMouseUp();
     this.startDrag = undefined;
+  };
+
+  private handlePinchChange = (touches: React.TouchList) => {
+    const length = getPinchLength(touches);
+    const midpoint = getPinchMidpoint(touches);
+    let scale = this.lastPinchLength
+      ? (this.scaleState.scale * length) / this.lastPinchLength // sometimes we get a touchchange before a touchstart when pinching
+      : this.scaleState.scale;
+
+    if (scale > 10) {
+      scale = 10;
+    }
+    if (scale < 0.1) {
+      scale = 0.1;
+    }
+
+    const { originX, originY } = this.scaleState;
+
+    this.scaleState.originX =
+      midpoint.x - ((midpoint.x - originX) / this.scaleState.scale) * scale;
+    this.scaleState.originY =
+      midpoint.y - ((midpoint.y - originY) / this.scaleState.scale) * scale;
+    this.scaleState.scale = scale;
+
+    this.setState({ imageScale: this.scaleState });
+
+    requestAnimationFrame(() => {
+      this.onShapeChange();
+      this.onImageChange();
+    });
   };
 
   private onMouseLeave: MouseEventHandler<HTMLCanvasElement> = () => {
@@ -499,4 +565,51 @@ export default class ReactPictureAnnotation extends React.Component<
       this.onImageChange();
     });
   };
+
+  private createNewAnnotation = (positionX: number, positionY: number) => {
+    this.shapes.push(
+      new RectShape(
+        {
+          id: randomId(),
+          mark: {
+            x: positionX,
+            y: positionY,
+            width: 0,
+            height: 0,
+            type: "RECT"
+          }
+        },
+        this.onShapeChange
+      )
+    );
+
+    this.setAnnotationState(new CreatingAnnotationState(this.context));
+  };
 }
+
+export const getPinchMidpoint = (touches: React.TouchList) => {
+  const touch1 = touches[0];
+  const touch2 = touches[1];
+  return {
+    x: (touch1.clientX + touch2.clientX) / 2,
+    y: (touch1.clientY + touch2.clientY) / 2
+  };
+};
+
+export const getPinchLength = (touches: React.TouchList) => {
+  const touch1 = touches[0];
+  const touch2 = touches[1];
+  return Math.sqrt(
+    Math.pow(touch1.clientY - touch2.clientY, 2) +
+      Math.pow(touch1.clientX - touch2.clientX, 2)
+  );
+};
+
+export const tryCancelEvent = (event: React.TouchEvent) => {
+  if (event.cancelable === false) {
+    return false;
+  }
+
+  event.preventDefault();
+  return true;
+};

@@ -1,9 +1,6 @@
 import ReactPictureAnnotation from "../ReactPictureAnnotation";
-import { RectShape } from "../Shape";
 import Transformer from "../Transformer";
-import randomId from "../utils/randomId";
 import { IAnnotationState } from "./AnnotationState";
-import CreatingAnnotationState from "./CreatingAnnotationState";
 import DraggingAnnotationState from "./DraggingAnnotationState";
 import TransformationState from "./TransfromationState";
 
@@ -31,7 +28,7 @@ export class DefaultAnnotationState implements IAnnotationState {
     ) {
       currentTransformer.startTransformation(positionX, positionY);
       setState(new TransformationState(this.context));
-      return;
+      return true;
     }
 
     for (let i = shapes.length - 1; i >= 0; i--) {
@@ -43,25 +40,9 @@ export class DefaultAnnotationState implements IAnnotationState {
         selectedShape.onDragStart(positionX, positionY);
         onShapeChange();
         setState(new DraggingAnnotationState(this.context));
-        return;
+        return true;
       }
     }
-    this.context.shapes.push(
-      new RectShape(
-        {
-          id: randomId(),
-          mark: {
-            x: positionX,
-            y: positionY,
-            width: 0,
-            height: 0,
-            type: "RECT"
-          }
-        },
-        onShapeChange
-      )
-    );
-
-    setState(new CreatingAnnotationState(this.context));
+    return false;
   };
 }
