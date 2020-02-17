@@ -17,6 +17,7 @@ interface IReactPictureAnnotationProps {
   image: string;
   editable: boolean;
   inputElement: (
+    editable: boolean,
     value: string,
     onChange: (value: string) => void,
     onDelete: () => void
@@ -49,11 +50,13 @@ export default class ReactPictureAnnotation extends React.Component<
   }
   public static defaultProps = {
     inputElement: (
+      editable: boolean,
       value: string,
       onChange: (value: string) => void,
       onDelete: () => void
     ) => (
       <DefaultInputSection
+        editable={editable}
         value={value}
         onChange={onChange}
         onDelete={onDelete}
@@ -147,7 +150,7 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   public render() {
-    const { width, height, inputElement } = this.props;
+    const { width, height, inputElement, editable } = this.props;
     const { showInput, inputPosition, inputComment } = this.state;
     return (
       <div className="rp-stage">
@@ -176,6 +179,7 @@ export default class ReactPictureAnnotation extends React.Component<
         {showInput && (
           <div className="rp-selected-input" style={inputPosition}>
             {inputElement(
+              editable,
               inputComment,
               this.onInputCommentChange,
               this.onDelete
@@ -294,12 +298,14 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   private onDelete = () => {
-    const deleteTarget = this.shapes.findIndex(
-      shape => shape.getAnnotationData().id === this.selectedId
-    );
-    if (deleteTarget >= 0) {
-      this.shapes.splice(deleteTarget, 1);
-      this.onShapeChange();
+    if (this.props.editable) {
+      const deleteTarget = this.shapes.findIndex(
+        shape => shape.getAnnotationData().id === this.selectedId
+      );
+      if (deleteTarget >= 0) {
+        this.shapes.splice(deleteTarget, 1);
+        this.onShapeChange();
+      }
     }
   };
 
@@ -317,11 +323,13 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   private onInputCommentChange = (comment: string) => {
-    const selectedShapeIndex = this.shapes.findIndex(
-      item => item.getAnnotationData().id === this.selectedId
-    );
-    this.shapes[selectedShapeIndex].setComment(comment);
-    this.setState({ inputComment: comment });
+    if (this.props.editable) {
+      const selectedShapeIndex = this.shapes.findIndex(
+        item => item.getAnnotationData().id === this.selectedId
+      );
+      this.shapes[selectedShapeIndex].setComment(comment);
+      this.setState({ inputComment: comment });
+    }
   };
 
   private cleanImage = () => {
