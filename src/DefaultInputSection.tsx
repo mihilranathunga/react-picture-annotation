@@ -1,5 +1,5 @@
 import React from "react";
-import { IAnnotation } from "../dist/types/src/Annotation";
+import { IAnnotation } from "./Annotation";
 import DeleteButton from "./DeleteButton";
 
 export interface IDefaultInputSection {
