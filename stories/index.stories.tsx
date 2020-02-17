@@ -8,9 +8,9 @@ import { IShapeData } from "../src/Shape";
 
 addDecorator(storyFn => <div>{storyFn()}</div>);
 
-storiesOf("Hello World", module)
+storiesOf("Annotator", module)
   .addDecorator(withA11y)
-  .add("Panning", () => {
+  .add("No Edit", () => {
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
         width: window.innerWidth - 16,
@@ -57,14 +57,14 @@ storiesOf("Hello World", module)
           onChange={data => setAnnotationData(data)}
           selectedId={selectedId}
           onSelect={e => setSelectedId(e)}
-          image="https://bequank.oss-cn-beijing.aliyuncs.com/landpage/large/60682895_p0_master1200.jpg"
+          image="https://unsplash.it/1200/600"
         />
       );
     };
 
     return <AnnotationComponent />;
   })
-  .add("Add Annotation", () => {
+  .add("Editable", () => {
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
         width: window.innerWidth - 16,

@@ -7,7 +7,7 @@ export default class CreatingAnnotationState implements IAnnotationState {
   constructor(context: ReactPictureAnnotation) {
     this.context = context;
   }
-  public onMouseDown = () => false;
+  public onMouseDown = () => undefined;
   public onMouseMove = (positionX: number, positionY: number) => {
     const { shapes } = this.context;
     if (shapes.length > 0) {
@@ -31,11 +31,12 @@ export default class CreatingAnnotationState implements IAnnotationState {
       data.getAnnotationData().mark.height !== 0
     ) {
       shapes.push(data);
+      this.context.selectedId = data.getAnnotationData().id;
     } else {
       this.context.selectedId = null;
-      onShapeChange();
     }
     setAnnotationState(new DefaultAnnotationState(this.context));
+    onShapeChange();
   };
 
   public onMouseLeave = () => this.onMouseUp();

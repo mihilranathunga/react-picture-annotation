@@ -1,13 +1,11 @@
 import React, { MouseEventHandler, TouchEventHandler } from "react";
 import { IAnnotation } from "./Annotation";
 import { IAnnotationState } from "./annotation/AnnotationState";
-import CreatingAnnotationState from "./annotation/CreatingAnnotationState";
 import { DefaultAnnotationState } from "./annotation/DefaultAnnotationState";
 import DefaultInputSection from "./DefaultInputSection";
 // import DeleteButton from "./DeleteButton";
 import { IShape, IShapeBase, RectShape, shapeStyle } from "./Shape";
 import Transformer, { ITransformer } from "./Transformer";
-import randomId from "./utils/randomId";
 
 interface IReactPictureAnnotationProps {
   annotationData?: IAnnotation[];
@@ -212,8 +210,14 @@ export default class ReactPictureAnnotation extends React.Component<
         );
 
         if (isSelected) {
-          if (!this.currentTransformer) {
-            this.currentTransformer = new Transformer(item);
+          if (
+            !this.currentTransformer ||
+            this.currentTransformer.id !== item.getAnnotationData().id
+          ) {
+            this.currentTransformer = new Transformer(
+              item,
+              this.props.editable
+            );
           }
 
           hasSelectedItem = true;
@@ -384,15 +388,8 @@ export default class ReactPictureAnnotation extends React.Component<
       offsetX,
       offsetY
     );
-    const hasHighlightedShape = this.currentAnnotationState.onMouseDown(
-      positionX,
-      positionY
-    );
-    if (editable) {
-      if (!hasHighlightedShape) {
-        this.createNewAnnotation(positionX, positionY);
-      }
-    } else {
+    this.currentAnnotationState.onMouseDown(positionX, positionY);
+    if (!editable) {
       const { originX, originY } = this.scaleState;
       this.startDrag = { x: offsetX, y: offsetY, originX, originY };
     }
@@ -435,15 +432,8 @@ export default class ReactPictureAnnotation extends React.Component<
       clientY
     );
 
-    const hasHighlightedShape = this.currentAnnotationState.onMouseDown(
-      positionX,
-      positionY
-    );
-    if (editable) {
-      if (!hasHighlightedShape && editable) {
-        this.createNewAnnotation(positionX, positionY);
-      }
-    } else {
+    this.currentAnnotationState.onMouseDown(positionX, positionY);
+    if (!editable) {
       const { touches } = event;
       if (touches.length === 2) {
         this.lastPinchLength = getPinchLength(touches);
@@ -564,26 +554,6 @@ export default class ReactPictureAnnotation extends React.Component<
       this.onShapeChange();
       this.onImageChange();
     });
-  };
-
-  private createNewAnnotation = (positionX: number, positionY: number) => {
-    this.shapes.push(
-      new RectShape(
-        {
-          id: randomId(),
-          mark: {
-            x: positionX,
-            y: positionY,
-            width: 0,
-            height: 0,
-            type: "RECT"
-          }
-        },
-        this.onShapeChange
-      )
-    );
-
-    this.setAnnotationState(new CreatingAnnotationState(this.context));
   };
 }
 

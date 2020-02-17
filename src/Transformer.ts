@@ -3,6 +3,7 @@ import { IShape, IShapeBase } from "Shape";
 const NODE_WIDTH = 10;
 
 export interface ITransformer {
+  id: string;
   checkBoundary: (positionX: number, positionY: number) => boolean;
   startTransformation: (positionX: number, positionY: number) => void;
   onTransformation: (positionX: number, positionY: number) => void;
@@ -13,11 +14,15 @@ export interface ITransformer {
 }
 
 export default class Transformer implements ITransformer {
+  public id: string;
   private shape: IShape;
+  private editable: boolean;
   private currentNodeCenterIndex: number;
 
-  constructor(shape: IShape) {
+  constructor(shape: IShape, editable: boolean) {
     this.shape = shape;
+    this.editable = editable;
+    this.id = shape.getAnnotationData().id;
   }
   public checkBoundary = (positionX: number, positionY: number) => {
     const currentCenterIndex = this.getCenterIndexByCursor(
@@ -50,15 +55,16 @@ export default class Transformer implements ITransformer {
     const allCentersTable = this.getAllCentersTable();
     canvas2D.save();
     canvas2D.fillStyle = "#5c7cfa";
-
-    for (const item of allCentersTable) {
-      const { x, y, width, height } = calculateTruePosition({
-        x: item.x - NODE_WIDTH / 2,
-        y: item.y - NODE_WIDTH / 2,
-        width: NODE_WIDTH,
-        height: NODE_WIDTH
-      });
-      canvas2D.fillRect(x, y, width, height);
+    if (this.editable) {
+      for (const item of allCentersTable) {
+        const { x, y, width, height } = calculateTruePosition({
+          x: item.x - NODE_WIDTH / 2,
+          y: item.y - NODE_WIDTH / 2,
+          width: NODE_WIDTH,
+          height: NODE_WIDTH
+        });
+        canvas2D.fillRect(x, y, width, height);
+      }
     }
 
     canvas2D.restore();

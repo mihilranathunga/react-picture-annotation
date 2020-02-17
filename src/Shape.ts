@@ -18,6 +18,9 @@ export interface IShapeBase {
   y: number;
   width: number;
   height: number;
+  shadowColor?: string;
+  backgroundColor?: string;
+  strokeColor?: string;
 }
 
 export interface IShapeAdjustBase extends Partial<IShapeBase> {}
@@ -92,19 +95,18 @@ export class RectShape implements IShape {
     calculateTruePosition: (shapeData: IShapeBase) => IShapeBase,
     selected: boolean
   ) => {
-    const { x, y, width, height } = calculateTruePosition(
-      this.annotationData.mark
-    );
+    const { mark } = this.annotationData;
+    const { x, y, width, height } = calculateTruePosition(mark);
     canvas2D.save();
 
     canvas2D.shadowBlur = 10;
-    canvas2D.shadowColor = shapeStyle.shapeShadowStyle;
-    canvas2D.strokeStyle = shapeStyle.shapeStrokeStyle;
+    canvas2D.shadowColor = mark.shadowColor || shapeStyle.shapeShadowStyle;
+    canvas2D.strokeStyle = mark.strokeColor || shapeStyle.shapeStrokeStyle;
     canvas2D.lineWidth = 2;
     canvas2D.strokeRect(x, y, width, height);
     canvas2D.restore();
     if (selected) {
-      canvas2D.fillStyle = shapeStyle.shapeBackground;
+      canvas2D.fillStyle = mark.backgroundColor || shapeStyle.shapeBackground;
       canvas2D.fillRect(x, y, width, height);
     } else {
       const { comment } = this.annotationData;
