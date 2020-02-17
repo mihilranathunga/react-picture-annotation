@@ -51,10 +51,11 @@ export class DefaultAnnotationState implements IAnnotationState {
       }
     }
     if (editable) {
+      const newShapeId = randomId();
       this.context.shapes.push(
         new RectShape(
           {
-            id: randomId(),
+            id: newShapeId,
             mark: {
               x: positionX,
               y: positionY,
@@ -66,6 +67,8 @@ export class DefaultAnnotationState implements IAnnotationState {
           onShapeChange
         )
       );
+
+      this.context.pendingShapeId = newShapeId;
 
       setState(new CreatingAnnotationState(this.context));
     }

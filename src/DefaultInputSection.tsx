@@ -1,16 +1,17 @@
 import React from "react";
+import { IAnnotation } from "../dist/types/src/Annotation";
 import DeleteButton from "./DeleteButton";
 
 export interface IDefaultInputSection {
   editable: boolean;
-  value: string;
+  annotation: IAnnotation;
   onChange: (value: string) => void;
   onDelete: () => void;
 }
 
 export default ({
   editable,
-  value,
+  annotation,
   onChange,
   onDelete
 }: IDefaultInputSection) => {
@@ -19,7 +20,7 @@ export default ({
       <input
         className="rp-default-input-section_input"
         placeholder="INPUT TAG HERE"
-        value={value}
+        value={annotation.comment}
         disabled={!editable}
         onChange={e => onChange(e.target.value)}
       />

@@ -18,7 +18,7 @@ interface IReactPictureAnnotationProps {
   editable: boolean;
   inputElement: (
     editable: boolean,
-    value: string,
+    annotation: IAnnotation,
     onChange: (value: string) => void,
     onDelete: () => void
   ) => React.ReactElement;
@@ -48,16 +48,25 @@ export default class ReactPictureAnnotation extends React.Component<
   get selectedId() {
     return this.selectedIdTrueValue;
   }
+
+  get selectedItem() {
+    if (!this.props.annotationData) {
+      return;
+    }
+    return this.props.annotationData.find(
+      el => el.id === this.selectedIdTrueValue
+    );
+  }
   public static defaultProps = {
     inputElement: (
       editable: boolean,
-      value: string,
+      annotation: IAnnotation,
       onChange: (value: string) => void,
       onDelete: () => void
     ) => (
       <DefaultInputSection
         editable={editable}
-        value={value}
+        annotation={annotation}
         onChange={onChange}
         onDelete={onDelete}
       />
@@ -67,14 +76,14 @@ export default class ReactPictureAnnotation extends React.Component<
 
   public shapes: IShape[] = [];
   public currentTransformer: ITransformer;
+  public pendingShapeId: string | null = null;
 
   public state = {
     inputPosition: {
       left: 0,
       top: 0
     },
-    showInput: false,
-    inputComment: ""
+    showInput: false
   };
   private currentAnnotationData: IAnnotation[] = [];
   private selectedIdTrueValue: string | null;
@@ -151,7 +160,7 @@ export default class ReactPictureAnnotation extends React.Component<
 
   public render() {
     const { width, height, inputElement, editable } = this.props;
-    const { showInput, inputPosition, inputComment } = this.state;
+    const { showInput, inputPosition } = this.state;
     return (
       <div className="rp-stage">
         <canvas
@@ -176,11 +185,11 @@ export default class ReactPictureAnnotation extends React.Component<
           onTouchMove={this.onTouchMove}
           onWheel={this.onWheel}
         />
-        {showInput && (
+        {showInput && this.selectedItem && (
           <div className="rp-selected-input" style={inputPosition}>
             {inputElement(
               editable,
-              inputComment,
+              this.selectedItem,
               this.onInputCommentChange,
               this.onDelete
             )}
@@ -236,8 +245,7 @@ export default class ReactPictureAnnotation extends React.Component<
             inputPosition: {
               left: x,
               top: y + height + shapeStyle.margin
-            },
-            inputComment: item.getAnnotationData().comment || ""
+            }
           });
         }
       }
@@ -327,8 +335,8 @@ export default class ReactPictureAnnotation extends React.Component<
       const selectedShapeIndex = this.shapes.findIndex(
         item => item.getAnnotationData().id === this.selectedId
       );
-      this.shapes[selectedShapeIndex].setComment(comment);
-      this.setState({ inputComment: comment });
+      this.shapes[selectedShapeIndex].getAnnotationData().comment = comment;
+      this.onShapeChange();
     }
   };
 
