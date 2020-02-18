@@ -3,25 +3,27 @@ import { IAnnotation } from "./Annotation";
 import { IAnnotationState } from "./annotation/AnnotationState";
 import { DefaultAnnotationState } from "./annotation/DefaultAnnotationState";
 import DefaultInputSection from "./DefaultInputSection";
-// import DeleteButton from "./DeleteButton";
 import { IShape, IShapeBase, RectShape, shapeStyle } from "./Shape";
 import Transformer, { ITransformer } from "./Transformer";
 
 interface IReactPictureAnnotationProps {
   annotationData?: IAnnotation[];
   selectedId?: string | null;
-  onChange: (annotationData: IAnnotation[]) => void;
+  onChange?: (annotationData: IAnnotation[]) => void;
   onSelect: (id: string | null) => void;
   width: number;
   height: number;
   image: string;
   editable: boolean;
-  inputElement: (
+  renderItemPreview: (
     editable: boolean,
     annotation: IAnnotation,
     onChange: (value: string) => void,
     onDelete: () => void
   ) => React.ReactElement;
+  onAnnotationUpdate?: (annotation: IAnnotation) => void;
+  onAnnotationCreate?: (annotation: IAnnotation) => void;
+  onAnnotationDelete?: (annotation: IAnnotation) => void;
 }
 
 interface IStageState {
@@ -58,7 +60,7 @@ export default class ReactPictureAnnotation extends React.Component<
     );
   }
   public static defaultProps = {
-    inputElement: (
+    renderItemPreview: (
       editable: boolean,
       annotation: IAnnotation,
       onChange: (value: string) => void,
@@ -159,7 +161,7 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   public render() {
-    const { width, height, inputElement, editable } = this.props;
+    const { width, height, renderItemPreview, editable } = this.props;
     const { showInput, inputPosition } = this.state;
     return (
       <div className="rp-stage">
@@ -187,7 +189,7 @@ export default class ReactPictureAnnotation extends React.Component<
         />
         {showInput && this.selectedItem && (
           <div className="rp-selected-input" style={inputPosition}>
-            {inputElement(
+            {renderItemPreview(
               editable,
               this.selectedItem,
               this.onInputCommentChange,
@@ -262,19 +264,44 @@ export default class ReactPictureAnnotation extends React.Component<
       item.getAnnotationData()
     );
     const { onChange } = this.props;
-    onChange(this.currentAnnotationData);
+    if (onChange) {
+      onChange(this.currentAnnotationData);
+    }
+  };
+
+  public onDelete = (id = this.selectedId) => {
+    const { onAnnotationDelete, editable } = this.props;
+    if (editable) {
+      const deleteTarget = this.shapes.findIndex(
+        shape => shape.getAnnotationData().id === id
+      );
+      if (deleteTarget >= 0) {
+        this.shapes.splice(deleteTarget, 1);
+        this.onShapeChange();
+        const annotation = this.shapes.find(
+          shape => shape.getAnnotationData().id === id
+        );
+        if (onAnnotationDelete && annotation) {
+          onAnnotationDelete(annotation.getAnnotationData());
+        }
+      }
+    }
   };
 
   private syncAnnotationData = () => {
     const { annotationData } = this.props;
     if (annotationData) {
       const refreshShapesWithAnnotationData = () => {
-        this.selectedId = null;
         const nextShapes = annotationData.map(
           eachAnnotationData =>
             new RectShape(eachAnnotationData, this.onShapeChange)
         );
         this.shapes = nextShapes;
+        if (
+          !nextShapes.find(el => el.getAnnotationData().id === this.selectedId)
+        ) {
+          this.selectedId = null;
+        }
         this.onShapeChange();
       };
 
@@ -302,18 +329,6 @@ export default class ReactPictureAnnotation extends React.Component<
     if (selectedId && selectedId !== this.selectedId) {
       this.selectedId = selectedId;
       this.onShapeChange();
-    }
-  };
-
-  private onDelete = () => {
-    if (this.props.editable) {
-      const deleteTarget = this.shapes.findIndex(
-        shape => shape.getAnnotationData().id === this.selectedId
-      );
-      if (deleteTarget >= 0) {
-        this.shapes.splice(deleteTarget, 1);
-        this.onShapeChange();
-      }
     }
   };
 

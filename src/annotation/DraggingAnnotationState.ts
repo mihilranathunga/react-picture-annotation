@@ -9,14 +9,27 @@ export default class DraggingAnnotationState implements IAnnotationState {
   }
   public onMouseDown = () => undefined;
   public onMouseMove = (positionX: number, positionY: number) => {
-    const { shapes } = this.context;
-    const currentShape = shapes[shapes.length - 1];
-    currentShape.onDrag(positionX, positionY);
+    const { shapes, selectedId } = this.context;
+    const currentShape = shapes.find(
+      el => el.getAnnotationData().id === selectedId
+    );
+    currentShape!.onDrag(positionX, positionY);
   };
 
   public onMouseUp = () => {
-    const { setAnnotationState } = this.context;
+    const {
+      shapes,
+      setAnnotationState,
+      selectedId,
+      props: { onAnnotationUpdate }
+    } = this.context;
     setAnnotationState(new DefaultAnnotationState(this.context));
+    if (onAnnotationUpdate) {
+      const currentShape = shapes.find(
+        el => el.getAnnotationData().id === selectedId
+      );
+      onAnnotationUpdate(currentShape!.getAnnotationData());
+    }
   };
 
   public onMouseLeave = () => this.onMouseUp();

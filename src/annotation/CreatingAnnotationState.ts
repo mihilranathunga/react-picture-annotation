@@ -9,7 +9,7 @@ export default class CreatingAnnotationState implements IAnnotationState {
   }
   public onMouseDown = () => undefined;
   public onMouseMove = (positionX: number, positionY: number) => {
-    const { shapes } = this.context;
+    const { shapes, onShapeChange } = this.context;
     if (shapes.length > 0) {
       const currentShape = shapes.find(
         el => el.getAnnotationData().id === this.context.pendingShapeId
@@ -24,10 +24,17 @@ export default class CreatingAnnotationState implements IAnnotationState {
         });
       }
     }
+    onShapeChange();
   };
 
   public onMouseUp = () => {
-    const { shapes, onShapeChange, setAnnotationState } = this.context;
+    const {
+      shapes,
+      onShapeChange,
+      setAnnotationState,
+      onDelete,
+      props: { onAnnotationCreate }
+    } = this.context;
     const data = shapes.find(
       el => el.getAnnotationData().id === this.context.pendingShapeId
     );
@@ -38,7 +45,11 @@ export default class CreatingAnnotationState implements IAnnotationState {
         data.getAnnotationData().mark.height !== 0
       ) {
         this.context.selectedId = data.getAnnotationData().id;
+        if (onAnnotationCreate) {
+          onAnnotationCreate(data.getAnnotationData());
+        }
       } else {
+        onDelete(this.context.pendingShapeId);
         this.context.selectedId = null;
       }
     } else {
