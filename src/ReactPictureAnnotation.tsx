@@ -15,6 +15,7 @@ interface IReactPictureAnnotationProps {
   height: number;
   image: string;
   editable: boolean;
+  drawLabel: boolean;
   renderItemPreview: (
     editable: boolean,
     annotation: IAnnotation,
@@ -73,7 +74,8 @@ export default class ReactPictureAnnotation extends React.Component<
         onDelete={onDelete}
       />
     ),
-    editable: false
+    editable: false,
+    drawLabel: true
   };
 
   public shapes: IShape[] = [];
@@ -221,7 +223,8 @@ export default class ReactPictureAnnotation extends React.Component<
         const { x, y, height } = item.paint(
           this.canvas2D,
           this.calculateShapePosition,
-          isSelected
+          isSelected,
+          this.props.drawLabel
         );
 
         if (isSelected) {

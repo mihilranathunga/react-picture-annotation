@@ -40,7 +40,8 @@ export interface IShape {
   paint: (
     canvas2D: CanvasRenderingContext2D,
     calculateTruePosition: (shapeData: IShapeBase) => IShapeBase,
-    selected: boolean
+    selected: boolean,
+    drawLabel: boolean
   ) => IShapeBase;
   getAnnotationData: () => IAnnotation;
   adjustMark: (adjustBase: IShapeAdjustBase) => void;
@@ -93,7 +94,8 @@ export class RectShape implements IShape {
   public paint = (
     canvas2D: CanvasRenderingContext2D,
     calculateTruePosition: (shapeData: IShapeBase) => IShapeBase,
-    selected: boolean
+    selected: boolean,
+    drawLabel: boolean
   ) => {
     const { mark } = this.annotationData;
     const { x, y, width, height } = calculateTruePosition(mark);
@@ -110,7 +112,7 @@ export class RectShape implements IShape {
       canvas2D.fillRect(x, y, width, height);
     } else {
       const { comment } = this.annotationData;
-      if (comment) {
+      if (comment && drawLabel) {
         canvas2D.font = `${shapeStyle.fontSize}px ${shapeStyle.fontFamily}`;
         const metrics = canvas2D.measureText(comment);
         canvas2D.save();

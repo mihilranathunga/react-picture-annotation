@@ -119,6 +119,62 @@ storiesOf("Annotator", module)
 
     return <AnnotationComponent />;
   })
+  .add("No Labels", () => {
+    const AnnotationComponent = () => {
+      const [size, setSize] = useState({
+        width: window.innerWidth - 16,
+        height: window.innerHeight - 16
+      });
+
+      const [annotationData, setAnnotationData] = useState<
+        Array<IAnnotation<IShapeData>>
+      >([
+        {
+          id: "a",
+          comment: "HA HA HA",
+          mark: {
+            type: "RECT",
+            width: 161,
+            height: 165,
+            x: 229,
+            y: 92
+          }
+        }
+      ]);
+
+      const [selectedId, setSelectedId] = useState<string | null>("a");
+
+      const onResize = () => {
+        setSize({
+          width: window.innerWidth - 16,
+          height: window.innerHeight - 16
+        });
+      };
+
+      useEffect(() => {
+        window.addEventListener("resize", onResize);
+        return () => {
+          window.removeEventListener("resize", onResize);
+        };
+      }, []);
+
+      return (
+        <ReactPictureAnnotation
+          width={size.width}
+          height={size.height}
+          annotationData={annotationData}
+          onChange={data => setAnnotationData(data)}
+          selectedId={selectedId}
+          onSelect={e => setSelectedId(e)}
+          editable={true}
+          drawLabel={false}
+          image="https://unsplash.it/1200/600"
+        />
+      );
+    };
+
+    return <AnnotationComponent />;
+  })
   .add("Colors", () => {
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
