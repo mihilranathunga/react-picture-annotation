@@ -16,8 +16,19 @@ export default class TransformationState implements IAnnotationState {
   };
 
   public onMouseUp = () => {
-    const { setAnnotationState } = this.context;
+    const {
+      shapes,
+      setAnnotationState,
+      selectedId,
+      props: { onAnnotationUpdate }
+    } = this.context;
     setAnnotationState(new DefaultAnnotationState(this.context));
+    if (onAnnotationUpdate) {
+      const currentShape = shapes.find(
+        el => el.getAnnotationData().id === selectedId
+      );
+      onAnnotationUpdate(currentShape!.getAnnotationData());
+    }
   };
 
   public onMouseLeave = () => this.onMouseUp();
