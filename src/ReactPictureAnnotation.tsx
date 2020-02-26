@@ -250,7 +250,7 @@ export default class ReactPictureAnnotation extends React.Component<
             inputPosition: {
               left: x,
               top: y + height + shapeStyle.margin,
-              height: `calc(${this.props.height}px - ${y +
+              maxHeight: `calc(${this.props.height}px - ${y +
                 height +
                 2 * shapeStyle.margin}px)`,
               overflow: "auto"
