@@ -292,6 +292,8 @@ export default class ReactPictureAnnotation extends React.Component<
           onAnnotationDelete(annotation.getAnnotationData());
         }
       }
+      this.selectedId = null;
+      this.onShapeChange();
     }
   };
 
@@ -358,6 +360,7 @@ export default class ReactPictureAnnotation extends React.Component<
         item => item.getAnnotationData().id === this.selectedId
       );
       this.shapes[selectedShapeIndex].getAnnotationData().comment = comment;
+      this.selectedId = null;
       this.onShapeChange();
     }
   };
