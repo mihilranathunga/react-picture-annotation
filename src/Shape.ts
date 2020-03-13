@@ -70,9 +70,11 @@ export class RectShape implements IShape {
   };
 
   public onDrag = (positionX: number, positionY: number) => {
-    this.annotationData.mark.x = positionX - this.dragStartOffset.offsetX;
-    this.annotationData.mark.y = positionY - this.dragStartOffset.offsetY;
-    this.onChangeCallBack();
+    if (this.dragStartOffset) {
+      this.annotationData.mark.x = positionX - this.dragStartOffset.offsetX;
+      this.annotationData.mark.y = positionY - this.dragStartOffset.offsetY;
+      this.onChangeCallBack();
+    }
   };
 
   public checkBoundary = (positionX: number, positionY: number) => {

@@ -27,7 +27,9 @@ export default class TransformationState implements IAnnotationState {
       const currentShape = shapes.find(
         el => el.getAnnotationData().id === selectedId
       );
-      onAnnotationUpdate(currentShape!.getAnnotationData());
+      if (currentShape) {
+        onAnnotationUpdate(currentShape.getAnnotationData());
+      }
     }
   };
 
