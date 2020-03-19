@@ -44,6 +44,13 @@ export default class CreatingAnnotationState implements IAnnotationState {
         data.getAnnotationData().mark.width !== 0 &&
         data.getAnnotationData().mark.height !== 0
       ) {
+        // make sure width, height are positive numbers
+        const { x, y, width, height } = data.getAnnotationData().mark;
+        data.getAnnotationData().mark.x = x + Math.min(0, width);
+        data.getAnnotationData().mark.y = y + Math.min(0, height);
+        data.getAnnotationData().mark.width = Math.abs(width);
+        data.getAnnotationData().mark.height = Math.abs(height);
+
         this.context.selectedId = data.getAnnotationData().id;
         if (onAnnotationCreate) {
           onAnnotationCreate(data.getAnnotationData());
