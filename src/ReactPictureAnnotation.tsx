@@ -117,6 +117,8 @@ export default class ReactPictureAnnotation extends React.Component<
       this.canvas2D = currentCanvas.getContext("2d");
       this.imageCanvas2D = currentImageCanvas.getContext("2d");
       this.onImageChange();
+
+      currentCanvas.addEventListener("wheel", this.onWheel, { passive: false });
     }
 
     this.syncAnnotationData();
@@ -141,6 +143,12 @@ export default class ReactPictureAnnotation extends React.Component<
 
     this.syncAnnotationData();
     this.syncSelectedId();
+  };
+
+  public componentWillUnmount = () => {
+    if (this.canvasRef.current) {
+      this.canvasRef.current.removeEventListener("wheel", this.onWheel);
+    }
   };
 
   public calculateMousePosition = (positionX: number, positionY: number) => {
@@ -187,7 +195,6 @@ export default class ReactPictureAnnotation extends React.Component<
           onTouchStart={this.onTouchStart}
           onTouchEnd={this.onTouchEnd}
           onTouchMove={this.onTouchMove}
-          onWheel={this.onWheel}
         />
         {showInput && this.selectedItem && (
           <div className="rp-selected-input" style={inputPosition}>
@@ -430,7 +437,7 @@ export default class ReactPictureAnnotation extends React.Component<
       offsetY
     );
     this.currentAnnotationState.onMouseDown(positionX, positionY);
-    if (!editable) {
+    if (!editable || event.shiftKey) {
       const { originX, originY } = this.scaleState;
       this.startDrag = { x: offsetX, y: offsetY, originX, originY };
     }
@@ -443,7 +450,7 @@ export default class ReactPictureAnnotation extends React.Component<
       offsetX,
       offsetY
     );
-    if (editable) {
+    if (!event.shiftKey && editable) {
       this.currentAnnotationState.onMouseMove(positionX, positionY);
     } else if (this.startDrag) {
       this.scaleState.originX =
@@ -562,32 +569,40 @@ export default class ReactPictureAnnotation extends React.Component<
     this.currentAnnotationState.onMouseLeave();
   };
 
-  private onWheel = (event: React.WheelEvent<HTMLCanvasElement>) => {
+  private onWheel = (event: WheelEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     // https://stackoverflow.com/a/31133823/9071503
-    const { clientHeight, scrollTop, scrollHeight } = event.currentTarget;
-    if (clientHeight + scrollTop + event.deltaY > scrollHeight) {
-      // event.preventDefault();
-      event.currentTarget.scrollTop = scrollHeight;
-    } else if (scrollTop + event.deltaY < 0) {
-      // event.preventDefault();
-      event.currentTarget.scrollTop = 0;
-    }
+    // const { clientHeight, scrollTop, scrollHeight,ctrlKey } = event;
+    // if (clientHeight + scrollTop + event.deltaY > scrollHeight) {
+    //   // event.preventDefault();
+    //   event.currentTarget.scrollTop = scrollHeight;
+    // } else if (scrollTop + event.deltaY < 0) {
+    //   // event.preventDefault();
+    //   event.currentTarget.scrollTop = 0;
+    // }
 
     const { scale: preScale } = this.scaleState;
-    this.scaleState.scale += event.deltaY * 0.005;
+    // this.scaleState.scale -= event.deltaY * 0.005;
+    const { offsetX, offsetY, ctrlKey, deltaY, deltaX } = event;
+
+    if (ctrlKey) {
+      this.scaleState.scale -= deltaY * 0.01;
+      const { originX, originY, scale } = this.scaleState;
+      this.scaleState.originX =
+        offsetX - ((offsetX - originX) / preScale) * scale;
+      this.scaleState.originY =
+        offsetY - ((offsetY - originY) / preScale) * scale;
+    } else {
+      this.scaleState.originX -= deltaX * 2;
+      this.scaleState.originY -= deltaY * 2;
+    }
     if (this.scaleState.scale > 10) {
       this.scaleState.scale = 10;
     }
     if (this.scaleState.scale < 0.1) {
       this.scaleState.scale = 0.1;
     }
-
-    const { originX, originY, scale } = this.scaleState;
-    const { offsetX, offsetY } = event.nativeEvent;
-    this.scaleState.originX =
-      offsetX - ((offsetX - originX) / preScale) * scale;
-    this.scaleState.originY =
-      offsetY - ((offsetY - originY) / preScale) * scale;
 
     this.setState({ imageScale: this.scaleState });
 
