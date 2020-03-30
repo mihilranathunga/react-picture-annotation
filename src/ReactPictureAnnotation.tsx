@@ -587,7 +587,17 @@ export default class ReactPictureAnnotation extends React.Component<
     const { offsetX, offsetY, ctrlKey, deltaY, deltaX } = event;
 
     if (ctrlKey) {
-      this.scaleState.scale -= deltaY * 0.01;
+      if (this.scaleState.scale > 10) {
+        this.scaleState.scale = 10;
+      } else if (this.scaleState.scale < 0.1) {
+        this.scaleState.scale = 0.1;
+      } else {
+        this.scaleState.scale -= deltaY * 0.01;
+        this.scaleState.scale = Math.max(
+          Math.min(this.scaleState.scale, 10),
+          0.1
+        );
+      }
       const { originX, originY, scale } = this.scaleState;
       this.scaleState.originX =
         offsetX - ((offsetX - originX) / preScale) * scale;
@@ -596,12 +606,6 @@ export default class ReactPictureAnnotation extends React.Component<
     } else {
       this.scaleState.originX -= deltaX * 2;
       this.scaleState.originY -= deltaY * 2;
-    }
-    if (this.scaleState.scale > 10) {
-      this.scaleState.scale = 10;
-    }
-    if (this.scaleState.scale < 0.1) {
-      this.scaleState.scale = 0.1;
     }
 
     this.setState({ imageScale: this.scaleState });
