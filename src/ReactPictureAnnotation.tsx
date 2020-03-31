@@ -304,6 +304,88 @@ export default class ReactPictureAnnotation extends React.Component<
     }
   };
 
+  public zoomIn = () => {
+    if (this.scaleState.scale > 10) {
+      this.scaleState.scale = 10;
+    } else if (this.scaleState.scale < 0.1) {
+      this.scaleState.scale = 0.1;
+    } else {
+      this.scaleState.scale += this.scaleState.scale * 0.2;
+      this.scaleState.scale = Math.max(
+        Math.min(this.scaleState.scale, 10),
+        0.1
+      );
+    }
+
+    this.setState({ imageScale: this.scaleState });
+
+    requestAnimationFrame(() => {
+      this.onShapeChange();
+      this.onImageChange();
+    });
+  };
+
+  public zoomOut = () => {
+    if (this.scaleState.scale > 10) {
+      this.scaleState.scale = 10;
+    } else if (this.scaleState.scale < 0.1) {
+      this.scaleState.scale = 0.1;
+    } else {
+      this.scaleState.scale -= this.scaleState.scale * 0.2;
+      this.scaleState.scale = Math.max(
+        Math.min(this.scaleState.scale, 10),
+        0.1
+      );
+    }
+
+    this.setState({ imageScale: this.scaleState });
+
+    requestAnimationFrame(() => {
+      this.onShapeChange();
+      this.onImageChange();
+    });
+  };
+
+  public reset = () => {
+    const nextImageNode =
+      this.currentImageElement || document.createElement("img");
+    const loadProperDimentions = () => {
+      const { width, height } = nextImageNode;
+      const imageNodeRatio = height / width;
+      const { width: canvasWidth, height: canvasHeight } = this.props;
+      const canvasNodeRatio = canvasHeight / canvasWidth;
+      if (!isNaN(imageNodeRatio) && !isNaN(canvasNodeRatio)) {
+        if (imageNodeRatio < canvasNodeRatio) {
+          const scale = canvasWidth / width;
+          this.scaleState = {
+            originX: 0,
+            originY: (canvasHeight - scale * height) / 2,
+            scale
+          };
+        } else {
+          const scale = canvasHeight / height;
+          this.scaleState = {
+            originX: (canvasWidth - scale * width) / 2,
+            originY: 0,
+            scale
+          };
+        }
+      }
+      this.onImageChange();
+      this.onShapeChange();
+    };
+    if (this.currentImageElement) {
+      loadProperDimentions();
+    } else {
+      nextImageNode.addEventListener("load", () => {
+        this.currentImageElement = nextImageNode;
+        loadProperDimentions();
+      });
+      nextImageNode.alt = "";
+      nextImageNode.src = this.props.image;
+    }
+  };
+
   private syncAnnotationData = () => {
     const { annotationData } = this.props;
     if (annotationData) {
@@ -396,35 +478,7 @@ export default class ReactPictureAnnotation extends React.Component<
           this.currentImageElement.height * scale
         );
       } else {
-        const nextImageNode = document.createElement("img");
-        nextImageNode.addEventListener("load", () => {
-          this.currentImageElement = nextImageNode;
-          const { width, height } = nextImageNode;
-          const imageNodeRatio = height / width;
-          const { width: canvasWidth, height: canvasHeight } = this.props;
-          const canvasNodeRatio = canvasHeight / canvasWidth;
-          if (!isNaN(imageNodeRatio) && !isNaN(canvasNodeRatio)) {
-            if (imageNodeRatio < canvasNodeRatio) {
-              const scale = canvasWidth / width;
-              this.scaleState = {
-                originX: 0,
-                originY: (canvasHeight - scale * height) / 2,
-                scale
-              };
-            } else {
-              const scale = canvasHeight / height;
-              this.scaleState = {
-                originX: (canvasWidth - scale * width) / 2,
-                originY: 0,
-                scale
-              };
-            }
-          }
-          this.onImageChange();
-          this.onShapeChange();
-        });
-        nextImageNode.alt = "";
-        nextImageNode.src = this.props.image;
+        this.reset();
       }
     }
   };

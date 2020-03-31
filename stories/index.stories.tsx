@@ -18,7 +18,7 @@ storiesOf("Annotator", module)
       });
 
       const [annotationData, setAnnotationData] = useState<
-        Array<IAnnotation<IShapeData>>
+        IAnnotation<IShapeData>[]
       >([
         {
           id: "a",
@@ -72,7 +72,7 @@ storiesOf("Annotator", module)
       });
 
       const [annotationData, setAnnotationData] = useState<
-        Array<IAnnotation<IShapeData>>
+        IAnnotation<IShapeData>[]
       >([
         {
           id: "a",
@@ -127,7 +127,7 @@ storiesOf("Annotator", module)
       });
 
       const [annotationData, setAnnotationData] = useState<
-        Array<IAnnotation<IShapeData>>
+        IAnnotation<IShapeData>[]
       >([
         {
           id: "a",
@@ -183,7 +183,7 @@ storiesOf("Annotator", module)
       });
 
       const [annotationData, setAnnotationData] = useState<
-        Array<IAnnotation<IShapeData>>
+        IAnnotation<IShapeData>[]
       >([
         {
           id: "a",
@@ -239,6 +239,105 @@ storiesOf("Annotator", module)
           onSelect={e => setSelectedId(e)}
           image="https://unsplash.it/1200/600"
         />
+      );
+    };
+
+    return <AnnotationComponent />;
+  })
+  .add("Buttons", () => {
+    const AnnotationComponent = () => {
+      const [size, setSize] = useState({
+        width: window.innerWidth - 16,
+        height: window.innerHeight - 16
+      });
+
+      const [annotationData, setAnnotationData] = useState<
+        IAnnotation<IShapeData>[]
+      >([
+        {
+          id: "a",
+          comment: "HA HA HA",
+          mark: {
+            type: "RECT",
+            width: 161,
+            height: 165,
+            x: 229,
+            y: 92
+          }
+        },
+        {
+          id: "b",
+          comment: "HA HA HA 2",
+          mark: {
+            type: "RECT",
+            width: 116,
+            height: 116,
+            x: 429,
+            y: 192
+          }
+        }
+      ]);
+
+      const [selectedId, setSelectedId] = useState<string | null>("a");
+
+      const onResize = () => {
+        setSize({
+          width: window.innerWidth - 16,
+          height: window.innerHeight - 16
+        });
+      };
+
+      useEffect(() => {
+        window.addEventListener("resize", onResize);
+        return () => {
+          window.removeEventListener("resize", onResize);
+        };
+      }, []);
+
+      const annotationRef = React.createRef<ReactPictureAnnotation>();
+
+      return (
+        <>
+          <ReactPictureAnnotation
+            width={size.width}
+            height={size.height}
+            annotationData={annotationData}
+            onChange={data => setAnnotationData(data)}
+            selectedId={selectedId}
+            onSelect={e => setSelectedId(e)}
+            image="https://unsplash.it/1200/600"
+            ref={annotationRef}
+          />
+          <div style={{ position: "absolute", zIndex: 1000 }}>
+            <button
+              onClick={() => {
+                if (annotationRef.current) {
+                  annotationRef.current.zoomIn();
+                }
+              }}
+            >
+              Zoom In
+            </button>
+            <button
+              onClick={() => {
+                if (annotationRef.current) {
+                  annotationRef.current.zoomOut();
+                }
+              }}
+            >
+              Zoom Out
+            </button>
+            <button
+              onClick={() => {
+                if (annotationRef.current) {
+                  annotationRef.current.reset();
+                }
+              }}
+            >
+              Reset
+            </button>
+          </div>
+        </>
       );
     };
 
