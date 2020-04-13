@@ -1,6 +1,7 @@
 import { withA11y } from "@storybook/addon-a11y";
 import { addDecorator, storiesOf } from "@storybook/react";
 import React, { useEffect, useState } from "react";
+import { action } from "@storybook/addon-actions";
 
 import { ReactPictureAnnotation } from "../src";
 import { IAnnotation } from "../src/Annotation";
@@ -48,7 +49,7 @@ storiesOf("Annotator", module)
           window.removeEventListener("resize", onResize);
         };
       }, []);
-
+      action("onSelect");
       return (
         <ReactPictureAnnotation
           width={size.width}
@@ -56,7 +57,9 @@ storiesOf("Annotator", module)
           annotationData={annotationData}
           onChange={data => setAnnotationData(data)}
           selectedId={selectedId}
-          onSelect={e => setSelectedId(e)}
+          onSelect={e => {
+            setSelectedId(e);
+          }}
           image="https://unsplash.it/1200/600"
         />
       );
@@ -181,10 +184,7 @@ storiesOf("Annotator", module)
         width: window.innerWidth - 16,
         height: window.innerHeight - 16
       });
-
-      const [annotationData, setAnnotationData] = useState<
-        IAnnotation<IShapeData>[]
-      >([
+      const annotations = [
         {
           id: "a",
           comment: "HA HA HA",
@@ -211,7 +211,11 @@ storiesOf("Annotator", module)
             backgroundColor: "rgba(0,255,0,0.2)"
           }
         }
-      ]);
+      ];
+
+      const [annotationData, setAnnotationData] = useState<
+        IAnnotation<IShapeData>[]
+      >(annotations);
 
       const [selectedId, setSelectedId] = useState<string | null>("a");
 
@@ -229,16 +233,24 @@ storiesOf("Annotator", module)
         };
       }, []);
 
+      const changeColor = () => {
+        annotations[0].mark.strokeColor = "blue";
+        setAnnotationData(annotations);
+      };
+
       return (
-        <ReactPictureAnnotation
-          width={size.width}
-          height={size.height}
-          annotationData={annotationData}
-          onChange={data => setAnnotationData(data)}
-          selectedId={selectedId}
-          onSelect={e => setSelectedId(e)}
-          image="https://unsplash.it/1200/600"
-        />
+        <>
+          <button onClick={changeColor}>Change Color</button>
+          <ReactPictureAnnotation
+            width={size.width}
+            height={size.height}
+            annotationData={annotationData}
+            onChange={data => setAnnotationData(data)}
+            selectedId={selectedId}
+            onSelect={e => setSelectedId(e)}
+            image="https://unsplash.it/1200/600"
+          />
+        </>
       );
     };
 

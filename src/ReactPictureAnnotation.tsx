@@ -44,8 +44,10 @@ export default class ReactPictureAnnotation extends React.Component<
 > {
   set selectedId(value: string | null) {
     const { onSelect } = this.props;
+    if (this.selectedIdTrueValue !== value) {
+      onSelect(value);
+    }
     this.selectedIdTrueValue = value;
-    onSelect(value);
   }
 
   get selectedId() {
@@ -90,7 +92,7 @@ export default class ReactPictureAnnotation extends React.Component<
     showInput: false
   };
   private currentAnnotationData: IAnnotation[] = [];
-  private selectedIdTrueValue: string | null;
+  private selectedIdTrueValue: string | null = null;
   private canvasRef = React.createRef<HTMLCanvasElement>();
   private canvas2D?: CanvasRenderingContext2D | null;
   private imageCanvasRef = React.createRef<HTMLCanvasElement>();
@@ -410,7 +412,12 @@ export default class ReactPictureAnnotation extends React.Component<
           const targetShape = this.shapes.find(
             item => item.getAnnotationData().id === annotationDataItem.id
           );
-          if (targetShape && targetShape.equal(annotationDataItem)) {
+          if (
+            targetShape &&
+            targetShape.equal(annotationDataItem) &&
+            JSON.stringify(targetShape.getAnnotationData().mark) ===
+              JSON.stringify(annotationDataItem.mark)
+          ) {
             continue;
           } else {
             refreshShapesWithAnnotationData();
