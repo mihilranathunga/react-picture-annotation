@@ -9,16 +9,25 @@ import TransformationState from "./TransfromationState";
 
 export class DefaultAnnotationState implements IAnnotationState {
   private context: ReactPictureAnnotation;
+  private hasMoved = false;
   constructor(context: ReactPictureAnnotation) {
     this.context = context;
+    this.hasMoved = false;
   }
-  public onMouseMove = () => undefined;
+  public onMouseMove = () => {
+    this.hasMoved = true;
+  };
   public onMouseUp = () => {
-    this.context.selectedId = null;
+    if (!this.hasMoved) {
+      this.context.selectedId = null;
+    }
     this.context.onShapeChange();
+    this.hasMoved = false;
   };
 
-  public onMouseLeave = () => undefined;
+  public onMouseLeave = () => {
+    this.hasMoved = false;
+  };
 
   public onMouseDown = (positionX: number, positionY: number) => {
     const {

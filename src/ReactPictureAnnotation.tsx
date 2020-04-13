@@ -514,6 +514,9 @@ export default class ReactPictureAnnotation extends React.Component<
     if (!event.shiftKey && editable) {
       this.currentAnnotationState.onMouseMove(positionX, positionY);
     } else if (this.startDrag) {
+      if (!editable) {
+        this.currentAnnotationState.onMouseMove(positionX, positionY);
+      }
       this.scaleState.originX =
         this.startDrag.originX + (offsetX - this.startDrag.x);
       this.scaleState.originY =
