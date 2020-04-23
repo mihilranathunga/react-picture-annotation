@@ -20,6 +20,7 @@ export interface IShapeBase {
   height: number;
   shadowColor?: string;
   backgroundColor?: string;
+  strokeWidth?: number;
   strokeColor?: string;
 }
 
@@ -36,7 +37,11 @@ export interface IRectShapeData extends IShapeData {
 export interface IShape {
   onDragStart: (positionX: number, positionY: number) => void;
   onDrag: (positionX: number, positionY: number) => void;
-  checkBoundary: (positionX: number, positionY: number) => boolean;
+  checkBoundary: (
+    positionX: number,
+    positionY: number,
+    padding?: number
+  ) => boolean;
   paint: (
     canvas2D: CanvasRenderingContext2D,
     calculateTruePosition: (shapeData: IShapeBase) => IShapeBase,
@@ -77,16 +82,20 @@ export class RectShape implements IShape {
     }
   };
 
-  public checkBoundary = (positionX: number, positionY: number) => {
+  public checkBoundary = (
+    positionX: number,
+    positionY: number,
+    padding = 0
+  ) => {
     const {
       mark: { x, y, width, height }
     } = this.annotationData;
 
     if (
-      ((positionX > x && positionX < x + width) ||
-        (positionX < x && positionX > x + width)) &&
-      ((positionY > y && positionY < y + height) ||
-        (positionY < y && positionY > y + height))
+      ((positionX > x - padding && positionX < x + width + padding) ||
+        (positionX < x + padding && positionX > x + width - padding)) &&
+      ((positionY > y - padding && positionY < y + height + padding) ||
+        (positionY < y + padding && positionY > y + height - padding))
     ) {
       return true;
     }
@@ -106,12 +115,22 @@ export class RectShape implements IShape {
     canvas2D.shadowBlur = 10;
     canvas2D.shadowColor = mark.shadowColor || shapeStyle.shapeShadowStyle;
     canvas2D.strokeStyle = mark.strokeColor || shapeStyle.shapeStrokeStyle;
-    canvas2D.lineWidth = 2;
-    canvas2D.strokeRect(x, y, width, height);
+    canvas2D.lineWidth = mark.strokeWidth || 4;
+    canvas2D.strokeRect(
+      x - canvas2D.lineWidth / 2,
+      y - canvas2D.lineWidth / 2,
+      width + canvas2D.lineWidth,
+      height + canvas2D.lineWidth
+    );
     canvas2D.restore();
     if (selected) {
       canvas2D.fillStyle = mark.backgroundColor || shapeStyle.shapeBackground;
-      canvas2D.fillRect(x, y, width, height);
+      canvas2D.fillRect(
+        x - canvas2D.lineWidth / 2,
+        y - canvas2D.lineWidth / 2,
+        width + canvas2D.lineWidth,
+        height + canvas2D.lineWidth
+      );
     } else {
       const { comment } = this.annotationData;
       if (comment && drawLabel) {

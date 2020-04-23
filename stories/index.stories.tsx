@@ -67,6 +67,63 @@ storiesOf("Annotator", module)
 
     return <AnnotationComponent />;
   })
+  .add("Hoverable", () => {
+    const AnnotationComponent = () => {
+      const [size, setSize] = useState({
+        width: window.innerWidth - 16,
+        height: window.innerHeight - 16
+      });
+
+      const [annotationData, setAnnotationData] = useState<
+        IAnnotation<IShapeData>[]
+      >([
+        {
+          id: "a",
+          comment: "Hello World",
+          mark: {
+            type: "RECT",
+            width: 161,
+            height: 165,
+            x: 229,
+            y: 92
+          }
+        }
+      ]);
+
+      const [selectedId, setSelectedId] = useState<string | null>("a");
+
+      const onResize = () => {
+        setSize({
+          width: window.innerWidth - 16,
+          height: window.innerHeight - 16
+        });
+      };
+
+      useEffect(() => {
+        window.addEventListener("resize", onResize);
+        return () => {
+          window.removeEventListener("resize", onResize);
+        };
+      }, []);
+      action("onSelect");
+      return (
+        <ReactPictureAnnotation
+          width={size.width}
+          height={size.height}
+          annotationData={annotationData}
+          onChange={data => setAnnotationData(data)}
+          selectedId={selectedId}
+          onSelect={e => {
+            setSelectedId(e);
+          }}
+          hoverable={true}
+          image="https://unsplash.it/1200/600"
+        />
+      );
+    };
+
+    return <AnnotationComponent />;
+  })
   .add("Editable", () => {
     const AnnotationComponent = () => {
       const [size, setSize] = useState({

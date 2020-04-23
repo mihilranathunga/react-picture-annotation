@@ -15,6 +15,7 @@ interface IReactPictureAnnotationProps {
   height: number;
   image: string;
   editable: boolean;
+  hoverable?: boolean;
   drawLabel: boolean;
   renderItemPreview: (
     editable: boolean,
@@ -199,7 +200,11 @@ export default class ReactPictureAnnotation extends React.Component<
           onTouchMove={this.onTouchMove}
         />
         {showInput && this.selectedItem && (
-          <div className="rp-selected-input" style={inputPosition}>
+          <div
+            className="rp-selected-input"
+            style={inputPosition}
+            onMouseEnter={() => (this.selectedId = this.selectedItem!.id)}
+          >
             {renderItemPreview(
               editable,
               this.selectedItem,
@@ -505,18 +510,13 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   private onMouseMove: MouseEventHandler<HTMLCanvasElement> = event => {
-    const { editable } = this.props;
     const { offsetX, offsetY } = event.nativeEvent;
     const { positionX, positionY } = this.calculateMousePosition(
       offsetX,
       offsetY
     );
-    if (!event.shiftKey && editable) {
-      this.currentAnnotationState.onMouseMove(positionX, positionY);
-    } else if (this.startDrag) {
-      if (!editable) {
-        this.currentAnnotationState.onMouseMove(positionX, positionY);
-      }
+    this.currentAnnotationState.onMouseMove(positionX, positionY);
+    if (this.startDrag) {
       this.scaleState.originX =
         this.startDrag.originX + (offsetX - this.startDrag.x);
       this.scaleState.originY =
