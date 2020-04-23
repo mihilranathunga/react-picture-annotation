@@ -263,7 +263,8 @@ export default class ReactPictureAnnotation extends React.Component<
             showInput: true,
             inputPosition: {
               left: x,
-              top: y + height + shapeStyle.margin,
+              top: y + height,
+              paddingTop: shapeStyle.margin,
               maxHeight: `calc(${this.props.height}px - ${y +
                 height +
                 2 * shapeStyle.margin}px)`,
