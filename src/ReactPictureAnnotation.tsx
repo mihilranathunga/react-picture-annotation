@@ -3,7 +3,7 @@ import { IAnnotation } from "./Annotation";
 import { IAnnotationState } from "./annotation/AnnotationState";
 import { DefaultAnnotationState } from "./annotation/DefaultAnnotationState";
 import DefaultInputSection from "./DefaultInputSection";
-import { IShape, IShapeBase, RectShape, shapeStyle } from "./Shape";
+import { IShape, IShapeBase, RectShape } from "./Shape";
 import Transformer, { ITransformer } from "./Transformer";
 
 interface IReactPictureAnnotationProps {
