@@ -271,7 +271,7 @@ export default class ReactPictureAnnotation extends React.Component<
             inputPosition: {
               ...(leftOfMiddle
                 ? { left: x }
-                : { right: containerWidth - x - width }),
+                : { right: containerWidth - (x + width) }),
               // ...(leftOfMiddle?{paddingLeft: margin}:{paddingRight:margin}),
               ...(topOfMiddle ? { top: y + height } : { bottom: -y }),
               ...(topOfMiddle
@@ -280,7 +280,8 @@ export default class ReactPictureAnnotation extends React.Component<
               // maxHeight: `calc(${this.props.height}px - ${y +
               //   height +
               //   2 * margin}px)`,
-              overflow: "auto"
+              overflow: "auto",
+              zIndex: 100000
             }
           });
         }
