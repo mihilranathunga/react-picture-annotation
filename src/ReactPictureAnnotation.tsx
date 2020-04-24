@@ -234,7 +234,7 @@ export default class ReactPictureAnnotation extends React.Component<
 
       for (const item of this.shapes) {
         const isSelected = item.getAnnotationData().id === this.selectedId;
-        const { x, y, height } = item.paint(
+        const { x, y, height, width } = item.paint(
           this.canvas2D,
           this.calculateShapePosition,
           isSelected,
@@ -258,16 +258,28 @@ export default class ReactPictureAnnotation extends React.Component<
             this.canvas2D,
             this.calculateShapePosition
           );
+          const { width: containerWidth, height: containerHeight } = this.props;
+
+          const leftOfMiddle = x < containerWidth / 2;
+          const topOfMiddle = y < containerHeight / 2;
+
+          const { strokeWidth = 4 } = item.getAnnotationData().mark;
+          const margin = strokeWidth + 10;
 
           this.setState({
             showInput: true,
             inputPosition: {
-              left: x,
-              top: y + height,
-              paddingTop: shapeStyle.margin,
-              maxHeight: `calc(${this.props.height}px - ${y +
-                height +
-                2 * shapeStyle.margin}px)`,
+              ...(leftOfMiddle
+                ? { left: x }
+                : { right: containerWidth - x - width }),
+              // ...(leftOfMiddle?{paddingLeft: margin}:{paddingRight:margin}),
+              ...(topOfMiddle ? { top: y + height } : { bottom: -y }),
+              ...(topOfMiddle
+                ? { paddingTop: margin }
+                : { paddingBottom: margin }),
+              // maxHeight: `calc(${this.props.height}px - ${y +
+              //   height +
+              //   2 * margin}px)`,
               overflow: "auto"
             }
           });
