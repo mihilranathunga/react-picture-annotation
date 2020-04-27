@@ -281,7 +281,7 @@ export default class ReactPictureAnnotation extends React.Component<
               //   height +
               //   2 * margin}px)`,
               overflow: "auto",
-              zIndex: 100000
+              zIndex: 1000
             }
           });
         }
