@@ -277,10 +277,13 @@ export default class ReactPictureAnnotation extends React.Component<
               ...(topOfMiddle
                 ? { paddingTop: margin }
                 : { paddingBottom: margin }),
-              // maxHeight: `calc(${this.props.height}px - ${y +
-              //   height +
-              //   2 * margin}px)`,
-              overflow: "auto",
+              ...(topOfMiddle && {
+                maxHeight: `calc(${this.props.height}px - ${y +
+                  height +
+                  2 * margin}px)`
+              }),
+              ...(!topOfMiddle && { maxHeight: `calc(${y - 2 * margin}px)` }),
+              overflow: "visible",
               zIndex: 1000
             }
           });
