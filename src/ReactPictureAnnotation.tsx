@@ -203,7 +203,12 @@ export default class ReactPictureAnnotation extends React.Component<
           <div
             className="rp-selected-input"
             style={inputPosition}
-            onMouseEnter={() => (this.selectedId = this.selectedItem!.id)}
+            onMouseEnter={() => {
+              this.selectedId = this.selectedItem!.id;
+              if (!this.props.hoverable) {
+                this.currentAnnotationState.onMouseUp();
+              }
+            }}
           >
             {renderItemPreview(
               editable,
