@@ -67,6 +67,91 @@ storiesOf("Annotator", module)
 
     return <AnnotationComponent />;
   })
+  .add("PDF", () => {
+    const AnnotationComponent = () => {
+      const [size, setSize] = useState({
+        width: window.innerWidth - 16,
+        height: window.innerHeight - 16
+      });
+
+      const [annotationData, setAnnotationData] = useState<
+        IAnnotation<IShapeData>[]
+      >([
+        {
+          id: "a",
+          comment: "Hello World",
+          mark: {
+            type: "RECT",
+            width: 161,
+            height: 165,
+            x: 229,
+            y: 92
+          }
+        }
+      ]);
+
+      const [selectedId, setSelectedId] = useState<string | null>("a");
+      const [page, setPage] = useState<number>(0);
+
+      const onResize = () => {
+        setSize({
+          width: window.innerWidth - 16,
+          height: window.innerHeight - 16
+        });
+      };
+
+      useEffect(() => {
+        window.addEventListener("resize", onResize);
+        return () => {
+          window.removeEventListener("resize", onResize);
+        };
+      }, []);
+      action("onSelect");
+      let total = 0;
+      const annotationRef = React.createRef<ReactPictureAnnotation>();
+      return (
+        <>
+          <ReactPictureAnnotation
+            ref={annotationRef}
+            hoverable={true}
+            page={page}
+            width={size.width}
+            height={size.height}
+            annotationData={annotationData}
+            onChange={data => setAnnotationData(data)}
+            selectedId={selectedId}
+            onSelect={e => {
+              setSelectedId(e);
+            }}
+            onPDFLoaded={({ pages }) => {
+              total = pages;
+            }}
+            pdf="https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf"
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: 12,
+              left: "50%",
+              right: "50%"
+            }}
+          >
+            <button onClick={() => setPage(page - 1)} disabled={page === 0}>
+              Prev
+            </button>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page === total - 1}
+            >
+              Next
+            </button>
+          </div>
+        </>
+      );
+    };
+
+    return <AnnotationComponent />;
+  })
   .add("Hoverable", () => {
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
