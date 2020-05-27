@@ -1,4 +1,5 @@
 import React, { MouseEventHandler, TouchEventHandler } from "react";
+import pdfjs from "pdfjs-dist";
 import { IAnnotation } from "./Annotation";
 import { IAnnotationState } from "./annotation/AnnotationState";
 import { DefaultAnnotationState } from "./annotation/DefaultAnnotationState";
@@ -13,7 +14,8 @@ interface IReactPictureAnnotationProps {
   onSelect: (id: string | null) => void;
   width: number;
   height: number;
-  image: string;
+  image?: string;
+  pdf?: string;
   editable: boolean;
   hoverable?: boolean;
   drawLabel: boolean;
@@ -111,6 +113,8 @@ export default class ReactPictureAnnotation extends React.Component<
   } = undefined;
   private lastPinchLength?: number;
 
+  private _PDF_DOC?: pdfjs.PDFDocumentProxy;
+
   public componentDidMount = () => {
     const currentCanvas = this.canvasRef.current;
     const currentImageCanvas = this.imageCanvasRef.current;
@@ -128,16 +132,21 @@ export default class ReactPictureAnnotation extends React.Component<
     this.syncSelectedId();
   };
 
-  public componentDidUpdate = (preProps: IReactPictureAnnotationProps) => {
-    const { width, height, image } = this.props;
-    if (preProps.width !== width || preProps.height !== height) {
+  public componentDidUpdate = async (
+    prevProps: IReactPictureAnnotationProps
+  ) => {
+    const { width, height, image, pdf } = this.props;
+    if (prevProps.width !== width || prevProps.height !== height) {
       this.setCanvasDPI();
       this.onShapeChange();
       this.onImageChange();
     }
-    if (preProps.image !== image) {
+    if (prevProps.pdf !== pdf) {
+      this._PDF_DOC = undefined;
+    }
+    if (prevProps.image !== image || prevProps.pdf !== pdf) {
       this.cleanImage();
-      if (this.currentImageElement) {
+      if (this.currentImageElement && image) {
         this.currentImageElement.src = image;
       } else {
         this.onImageChange();
@@ -411,7 +420,11 @@ export default class ReactPictureAnnotation extends React.Component<
         loadProperDimentions();
       });
       nextImageNode.alt = "";
-      nextImageNode.src = this.props.image;
+      if (this.props.image) {
+        nextImageNode.src = this.props.image;
+      } else if (this.props.pdf) {
+        this.onImageChange();
+      }
     }
   };
 
@@ -499,11 +512,29 @@ export default class ReactPictureAnnotation extends React.Component<
     }
   };
 
-  private onImageChange = () => {
+  private onImageChange = async () => {
     this.cleanImage();
+    if (!this._PDF_DOC && this.props.pdf) {
+      this._PDF_DOC = await pdfjs.getDocument({ url: this.props.pdf }).promise;
+    }
     if (this.imageCanvas2D && this.imageCanvasRef.current) {
-      if (this.currentImageElement) {
-        const { originX, originY, scale } = this.scaleState;
+      const { originX, originY, scale } = this.scaleState;
+      if (this._PDF_DOC) {
+        try {
+          const page = await this._PDF_DOC.getPage(1);
+
+          // get viewport to render the page at required scale
+          const viewport = page.getViewport({ scale });
+
+          await page.render({
+            canvasContext: this.imageCanvas2D,
+            viewport
+          });
+        } catch (error) {
+          // tslint:disable-next-line: no-console
+          console.error(error.message);
+        }
+      } else if (this.currentImageElement) {
         this.imageCanvas2D.drawImage(
           this.currentImageElement,
           originX,

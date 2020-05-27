@@ -82,6 +82,8 @@
     "typescript": "^3.5.1"
   },
   "dependencies": {
+    "@types/pdfjs-dist": "^2.1.4",
+    "pdfjs-dist": "^2.3.200",
     "prop-types": "^15.7.2",
     "reselect": "^4.0.0",
     "warning": "^4.0.3"
