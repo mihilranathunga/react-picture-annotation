@@ -118,7 +118,6 @@ export default class ReactPictureAnnotation extends React.Component<
   private lastPinchLength?: number;
 
   private _PDF_DOC?: pdfjs.PDFDocumentProxy;
-  private hasSetDPI = false;
 
   public componentDidMount = async () => {
     const currentCanvas = this.canvasRef.current;
@@ -508,8 +507,9 @@ export default class ReactPictureAnnotation extends React.Component<
     if (currentCanvas && currentImageCanvas) {
       const currentCanvas2D = currentCanvas.getContext("2d");
       const currentImageCanvas2D = currentImageCanvas.getContext("2d");
-      if (currentCanvas2D && currentImageCanvas2D && !this.hasSetDPI) {
-        this.hasSetDPI = true;
+      if (currentCanvas2D && currentImageCanvas2D) {
+        currentCanvas2D.resetTransform();
+        currentImageCanvas2D.resetTransform();
         currentCanvas2D.scale(2, 2);
         currentImageCanvas2D.scale(2, 2);
       }
