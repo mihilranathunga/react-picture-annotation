@@ -7,6 +7,8 @@ import DefaultInputSection from "./DefaultInputSection";
 import { IShape, IShapeBase, RectShape } from "./Shape";
 import Transformer, { ITransformer } from "./Transformer";
 
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+
 interface IReactPictureAnnotationProps {
   annotationData?: IAnnotation[];
   selectedId?: string | null;
@@ -14,6 +16,7 @@ interface IReactPictureAnnotationProps {
   onSelect: (id: string | null) => void;
   width: number;
   height: number;
+  page?: number;
   image?: string;
   pdf?: string;
   editable: boolean;
@@ -28,6 +31,7 @@ interface IReactPictureAnnotationProps {
   onAnnotationUpdate?: (annotation: IAnnotation) => void;
   onAnnotationCreate?: (annotation: IAnnotation) => void;
   onAnnotationDelete?: (annotation: IAnnotation) => void;
+  onPDFLoaded?: (props: { pages: number }) => void;
 }
 
 interface IStageState {
@@ -120,6 +124,9 @@ export default class ReactPictureAnnotation extends React.Component<
     const currentImageCanvas = this.imageCanvasRef.current;
     if (this.props.pdf) {
       this._PDF_DOC = await pdfjs.getDocument({ url: this.props.pdf }).promise;
+      if (this.props.onPDFLoaded) {
+        this.props.onPDFLoaded({ pages: this._PDF_DOC.numPages });
+      }
     }
     if (currentCanvas && currentImageCanvas) {
       this.setCanvasDPI();
@@ -138,7 +145,7 @@ export default class ReactPictureAnnotation extends React.Component<
   public componentDidUpdate = async (
     prevProps: IReactPictureAnnotationProps
   ) => {
-    const { width, height, image, pdf } = this.props;
+    const { width, height, image, pdf, page } = this.props;
     if (prevProps.width !== width || prevProps.height !== height) {
       this.setCanvasDPI();
       this.onShapeChange();
@@ -147,6 +154,9 @@ export default class ReactPictureAnnotation extends React.Component<
     if (prevProps.pdf !== pdf) {
       if (pdf) {
         this._PDF_DOC = await pdfjs.getDocument({ url: pdf }).promise;
+        if (this.props.onPDFLoaded) {
+          this.props.onPDFLoaded({ pages: this._PDF_DOC.numPages });
+        }
       } else {
         this._PDF_DOC = undefined;
       }
@@ -156,7 +166,12 @@ export default class ReactPictureAnnotation extends React.Component<
       if (this.currentImageElement) {
         if (image) {
           this.currentImageElement.src = image;
-        } else if (this._PDF_DOC) {
+        }
+      }
+    }
+    if (prevProps.pdf !== pdf || (prevProps.page !== page && pdf)) {
+      if (this.currentImageElement) {
+        if (this._PDF_DOC) {
           this.currentImageElement.src = await this.loadPDFPage();
         }
       }
@@ -539,19 +554,19 @@ export default class ReactPictureAnnotation extends React.Component<
     }
   };
 
-  private loadPDFPage = async (pageNum = 1) => {
+  private loadPDFPage = async (pageNum = (this.props.page || 0) + 1) => {
     if (this._PDF_DOC) {
       const page = await this._PDF_DOC.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 3 });
+      const viewport = page.getViewport({ scale: 5 });
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d")!;
 
       canvas.height = viewport.height;
       canvas.width = viewport.width;
 
-      await page.render({ canvasContext: ctx, viewport });
+      await page.render({ canvasContext: ctx, viewport }).promise;
 
-      return canvas.toDataURL();
+      return canvas.toDataURL("image/png", 1);
     }
     return "";
   };
