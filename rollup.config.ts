@@ -9,6 +9,8 @@ import external from "rollup-plugin-peer-deps-external";
 import postcss from "rollup-plugin-postcss";
 // import typescript from "rollup-plugin-typescript2";
 import url from "rollup-plugin-url";
+import builtins from 'rollup-plugin-node-builtins';
+
 
 // tslint:disable-next-line: no-var-requires
 const pkg = require("./package.json");
@@ -27,6 +29,7 @@ export default {
     include: "src/**"
   },
   plugins: [
+    builtins(),
     external(),
     postcss({
       modules: false

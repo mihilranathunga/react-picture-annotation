@@ -147,7 +147,6 @@ export default class ReactPictureAnnotation extends React.Component<
   ) => {
     const { width, height, image, pdf, page } = this.props;
     if (prevProps.width !== width || prevProps.height !== height) {
-      this.setCanvasDPI();
       this.onShapeChange();
       this.onImageChange();
     }

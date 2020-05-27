@@ -1,6 +1,6 @@
 {
   "name": "@cognite/react-picture-annotation",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A simple annotation component.",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -86,6 +86,7 @@
     "pdfjs-dist": "^2.3.200",
     "prop-types": "^15.7.2",
     "reselect": "^4.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
     "warning": "^4.0.3"
   },
   "husky": {
