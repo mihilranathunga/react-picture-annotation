@@ -86,7 +86,6 @@
     "pdfjs-dist": "^2.3.200",
     "prop-types": "^15.7.2",
     "reselect": "^4.0.0",
-    "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "warning": "^4.0.3"
   },
