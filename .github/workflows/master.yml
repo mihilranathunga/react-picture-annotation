@@ -1,5 +1,5 @@
 name: Build and Deploy
-on: 
+on:
   push:
     branches:
       - master
@@ -22,4 +22,4 @@ jobs:
         with:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
-          FOLDER: build # The folder the action should deploy.
+          FOLDER: storybook-static # The folder the action should deploy.

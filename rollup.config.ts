@@ -1,7 +1,7 @@
 import commonjs from "rollup-plugin-commonjs";
 import resolve from "rollup-plugin-node-resolve";
 import sourceMaps from "rollup-plugin-sourcemaps";
-
+import nodePolyfills from 'rollup-plugin-node-polyfills';
 import svgr from "@svgr/rollup";
 import babel from "rollup-plugin-babel";
 import json from "rollup-plugin-json";
@@ -9,7 +9,6 @@ import external from "rollup-plugin-peer-deps-external";
 import postcss from "rollup-plugin-postcss";
 // import typescript from "rollup-plugin-typescript2";
 import url from "rollup-plugin-url";
-import builtins from 'rollup-plugin-node-builtins';
 
 
 // tslint:disable-next-line: no-var-requires
@@ -29,7 +28,6 @@ export default {
     include: "src/**"
   },
   plugins: [
-    builtins(),
     external(),
     postcss({
       modules: false
@@ -43,6 +41,7 @@ export default {
     commonjs(),
     babel({ extensions, include: ["src/**/*"] }),
     // Resolve source maps to the original source
-    sourceMaps()
+    sourceMaps(),
+    nodePolyfills()
   ]
 };

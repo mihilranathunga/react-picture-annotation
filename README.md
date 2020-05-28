@@ -1,6 +1,6 @@
 # React Picture Annotation
 
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kunduin/react-picture-annotation/blob/master/LICENSE) [![Travis (.com)](https://img.shields.io/travis/com/kunduin/react-picture-annotation.svg)](https://travis-ci.com/Kunduin/react-picture-annotation) [![npm](https://img.shields.io/npm/v/react-picture-annotation.svg)](https://www.npmjs.com/package/react-picture-annotation) [![Greenkeeper badge](https://badges.greenkeeper.io/Kunduin/react-picture-annotation.svg)](https://greenkeeper.io/)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kunduin/react-picture-annotation/blob/master/LICENSE)
 
 A simple annotation component.
 
@@ -24,7 +24,7 @@ yarn add react-picture-annotation
 const App = () => {
   const [pageSize, setPageSize] = useState({
     width: window.innerWidth,
-    height: window.innerHeight
+    height: window.innerHeight,
   });
   const onResize = () => {
     setPageSize({ width: window.innerWidth, height: window.innerHeight });
@@ -35,8 +35,8 @@ const App = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const onSelect = selectedId => console.log(selectedId);
-  const onChange = data => console.log(data);
+  const onSelect = (selectedId) => console.log(selectedId);
+  const onChange = (data) => console.log(data);
 
   return (
     <div className="App">
@@ -161,7 +161,7 @@ Customizable input control.
 ```jsx
 <ReactPictureAnnotation
   {...props}
-  inputElement={inputProps => <MyInput {...inputProps} />}
+  inputElement={(inputProps) => <MyInput {...inputProps} />}
 />
 ```
 
