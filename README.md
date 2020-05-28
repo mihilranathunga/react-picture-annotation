@@ -17,3 +17,5 @@ yarn add @cognite/react-picture-annotation
 ```
 
 ## [Storybook](https://cognitedata.github.io/react-picture-annotation/?path=/story/*)
+
+Shout out the the orig repo: https://github.com/Kunduin/react-picture-annotation
