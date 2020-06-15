@@ -7,7 +7,7 @@ import { ReactPictureAnnotation } from "../src";
 import { IAnnotation } from "../src/Annotation";
 import { IShapeData } from "../src/Shape";
 
-addDecorator(storyFn => <div>{storyFn()}</div>);
+addDecorator((storyFn) => <div>{storyFn()}</div>);
 
 storiesOf("Annotator", module)
   .addDecorator(withA11y)
@@ -15,7 +15,7 @@ storiesOf("Annotator", module)
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
         width: window.innerWidth - 16,
-        height: window.innerHeight - 16
+        height: window.innerHeight - 16,
       });
 
       const [annotationData, setAnnotationData] = useState<
@@ -29,9 +29,9 @@ storiesOf("Annotator", module)
             width: 161,
             height: 165,
             x: 229,
-            y: 92
-          }
-        }
+            y: 92,
+          },
+        },
       ]);
 
       const [selectedId, setSelectedId] = useState<string | null>("a");
@@ -39,7 +39,7 @@ storiesOf("Annotator", module)
       const onResize = () => {
         setSize({
           width: window.innerWidth - 16,
-          height: window.innerHeight - 16
+          height: window.innerHeight - 16,
         });
       };
 
@@ -55,9 +55,9 @@ storiesOf("Annotator", module)
           width={size.width}
           height={size.height}
           annotationData={annotationData}
-          onChange={data => setAnnotationData(data)}
+          onChange={(data) => setAnnotationData(data)}
           selectedId={selectedId}
-          onSelect={e => {
+          onSelect={(e) => {
             setSelectedId(e);
           }}
           image="https://unsplash.it/1200/600"
@@ -71,7 +71,7 @@ storiesOf("Annotator", module)
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
         width: window.innerWidth - 16,
-        height: window.innerHeight - 16
+        height: window.innerHeight - 16,
       });
 
       const [annotationData, setAnnotationData] = useState<
@@ -85,9 +85,9 @@ storiesOf("Annotator", module)
             width: 161,
             height: 165,
             x: 229,
-            y: 92
-          }
-        }
+            y: 92,
+          },
+        },
       ]);
 
       const [selectedId, setSelectedId] = useState<string | null>("a");
@@ -96,7 +96,7 @@ storiesOf("Annotator", module)
       const onResize = () => {
         setSize({
           width: window.innerWidth - 16,
-          height: window.innerHeight - 16
+          height: window.innerHeight - 16,
         });
       };
 
@@ -118,9 +118,9 @@ storiesOf("Annotator", module)
             width={size.width}
             height={size.height}
             annotationData={annotationData}
-            onChange={data => setAnnotationData(data)}
+            onChange={(data) => setAnnotationData(data)}
             selectedId={selectedId}
-            onSelect={e => {
+            onSelect={(e) => {
               setSelectedId(e);
             }}
             onPDFLoaded={({ pages }) => {
@@ -133,7 +133,7 @@ storiesOf("Annotator", module)
               position: "absolute",
               bottom: 12,
               left: "50%",
-              right: "50%"
+              right: "50%",
             }}
           >
             <button onClick={() => setPage(page - 1)} disabled={page === 0}>
@@ -156,7 +156,7 @@ storiesOf("Annotator", module)
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
         width: window.innerWidth - 16,
-        height: window.innerHeight - 16
+        height: window.innerHeight - 16,
       });
 
       const [annotationData, setAnnotationData] = useState<
@@ -170,9 +170,9 @@ storiesOf("Annotator", module)
             width: 161,
             height: 165,
             x: 229,
-            y: 92
-          }
-        }
+            y: 92,
+          },
+        },
       ]);
 
       const [selectedId, setSelectedId] = useState<string | null>("a");
@@ -180,7 +180,7 @@ storiesOf("Annotator", module)
       const onResize = () => {
         setSize({
           width: window.innerWidth - 16,
-          height: window.innerHeight - 16
+          height: window.innerHeight - 16,
         });
       };
 
@@ -196,9 +196,9 @@ storiesOf("Annotator", module)
           width={size.width}
           height={size.height}
           annotationData={annotationData}
-          onChange={data => setAnnotationData(data)}
+          onChange={(data) => setAnnotationData(data)}
           selectedId={selectedId}
-          onSelect={e => {
+          onSelect={(e) => {
             setSelectedId(e);
           }}
           hoverable={true}
@@ -209,11 +209,83 @@ storiesOf("Annotator", module)
 
     return <AnnotationComponent />;
   })
+  .add("Refresh", () => {
+    const AnnotationComponent = () => {
+      const [size, setSize] = useState({
+        width: window.innerWidth - 16,
+        height: window.innerHeight - 16,
+      });
+
+      const [image, setImage] = useState("https://picsum.photos/id/1/200/300");
+
+      const [annotationData, setAnnotationData] = useState<
+        IAnnotation<IShapeData>[]
+      >([
+        {
+          id: "a",
+          comment: "Hello World",
+          mark: {
+            type: "RECT",
+            width: 161,
+            height: 165,
+            x: 229,
+            y: 92,
+          },
+        },
+      ]);
+
+      const [selectedId, setSelectedId] = useState<string | null>("a");
+
+      const onResize = () => {
+        setSize({
+          width: window.innerWidth - 16,
+          height: window.innerHeight - 16,
+        });
+      };
+
+      useEffect(() => {
+        window.addEventListener("resize", onResize);
+        return () => {
+          window.removeEventListener("resize", onResize);
+        };
+      }, []);
+      action("onSelect");
+      return (
+        <>
+          <button
+            onClick={() =>
+              setImage(
+                `https://picsum.photos/id/${Math.round(
+                  Math.random() * 1000
+                )}/200/300`
+              )
+            }
+          >
+            Change Image
+          </button>
+          <ReactPictureAnnotation
+            width={size.width}
+            height={size.height}
+            annotationData={annotationData}
+            onChange={(data) => setAnnotationData(data)}
+            selectedId={selectedId}
+            onSelect={(e) => {
+              setSelectedId(e);
+            }}
+            hoverable={true}
+            image={image}
+          />
+        </>
+      );
+    };
+
+    return <AnnotationComponent />;
+  })
   .add("Editable", () => {
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
         width: window.innerWidth - 16,
-        height: window.innerHeight - 16
+        height: window.innerHeight - 16,
       });
 
       const [annotationData, setAnnotationData] = useState<
@@ -227,9 +299,9 @@ storiesOf("Annotator", module)
             width: 161,
             height: 165,
             x: 229,
-            y: 92
-          }
-        }
+            y: 92,
+          },
+        },
       ]);
 
       const [selectedId, setSelectedId] = useState<string | null>("a");
@@ -237,7 +309,7 @@ storiesOf("Annotator", module)
       const onResize = () => {
         setSize({
           width: window.innerWidth - 16,
-          height: window.innerHeight - 16
+          height: window.innerHeight - 16,
         });
       };
 
@@ -253,9 +325,9 @@ storiesOf("Annotator", module)
           width={size.width}
           height={size.height}
           annotationData={annotationData}
-          onChange={data => setAnnotationData(data)}
+          onChange={(data) => setAnnotationData(data)}
           selectedId={selectedId}
-          onSelect={e => setSelectedId(e)}
+          onSelect={(e) => setSelectedId(e)}
           editable={true}
           image="https://unsplash.it/1200/600"
         />
@@ -268,7 +340,7 @@ storiesOf("Annotator", module)
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
         width: window.innerWidth - 16,
-        height: window.innerHeight - 16
+        height: window.innerHeight - 16,
       });
 
       const [annotationData, setAnnotationData] = useState<
@@ -282,9 +354,9 @@ storiesOf("Annotator", module)
             width: 161,
             height: 165,
             x: 229,
-            y: 92
-          }
-        }
+            y: 92,
+          },
+        },
       ]);
 
       const [selectedId, setSelectedId] = useState<string | null>("a");
@@ -292,7 +364,7 @@ storiesOf("Annotator", module)
       const onResize = () => {
         setSize({
           width: window.innerWidth - 16,
-          height: window.innerHeight - 16
+          height: window.innerHeight - 16,
         });
       };
 
@@ -308,9 +380,9 @@ storiesOf("Annotator", module)
           width={size.width}
           height={size.height}
           annotationData={annotationData}
-          onChange={data => setAnnotationData(data)}
+          onChange={(data) => setAnnotationData(data)}
           selectedId={selectedId}
-          onSelect={e => setSelectedId(e)}
+          onSelect={(e) => setSelectedId(e)}
           editable={true}
           drawLabel={false}
           image="https://unsplash.it/1200/600"
@@ -324,7 +396,7 @@ storiesOf("Annotator", module)
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
         width: window.innerWidth - 16,
-        height: window.innerHeight - 16
+        height: window.innerHeight - 16,
       });
       const annotations = [
         {
@@ -337,8 +409,8 @@ storiesOf("Annotator", module)
             x: 229,
             y: 92,
             strokeColor: "red",
-            backgroundColor: "rgba(255,0,0,0.2)"
-          }
+            backgroundColor: "rgba(255,0,0,0.2)",
+          },
         },
         {
           id: "b",
@@ -350,9 +422,9 @@ storiesOf("Annotator", module)
             x: 429,
             y: 192,
             strokeColor: "green",
-            backgroundColor: "rgba(0,255,0,0.2)"
-          }
-        }
+            backgroundColor: "rgba(0,255,0,0.2)",
+          },
+        },
       ];
 
       const [annotationData, setAnnotationData] = useState<
@@ -364,7 +436,7 @@ storiesOf("Annotator", module)
       const onResize = () => {
         setSize({
           width: window.innerWidth - 16,
-          height: window.innerHeight - 16
+          height: window.innerHeight - 16,
         });
       };
 
@@ -387,9 +459,9 @@ storiesOf("Annotator", module)
             width={size.width}
             height={size.height}
             annotationData={annotationData}
-            onChange={data => setAnnotationData(data)}
+            onChange={(data) => setAnnotationData(data)}
             selectedId={selectedId}
-            onSelect={e => setSelectedId(e)}
+            onSelect={(e) => setSelectedId(e)}
             image="https://unsplash.it/1200/600"
           />
         </>
@@ -402,7 +474,7 @@ storiesOf("Annotator", module)
     const AnnotationComponent = () => {
       const [size, setSize] = useState({
         width: window.innerWidth - 16,
-        height: window.innerHeight - 16
+        height: window.innerHeight - 16,
       });
 
       const [annotationData, setAnnotationData] = useState<
@@ -416,8 +488,8 @@ storiesOf("Annotator", module)
             width: 161,
             height: 165,
             x: 229,
-            y: 92
-          }
+            y: 92,
+          },
         },
         {
           id: "b",
@@ -427,9 +499,9 @@ storiesOf("Annotator", module)
             width: 116,
             height: 116,
             x: 429,
-            y: 192
-          }
-        }
+            y: 192,
+          },
+        },
       ]);
 
       const [selectedId, setSelectedId] = useState<string | null>("a");
@@ -437,7 +509,7 @@ storiesOf("Annotator", module)
       const onResize = () => {
         setSize({
           width: window.innerWidth - 16,
-          height: window.innerHeight - 16
+          height: window.innerHeight - 16,
         });
       };
 
@@ -456,9 +528,9 @@ storiesOf("Annotator", module)
             width={size.width}
             height={size.height}
             annotationData={annotationData}
-            onChange={data => setAnnotationData(data)}
+            onChange={(data) => setAnnotationData(data)}
             selectedId={selectedId}
-            onSelect={e => setSelectedId(e)}
+            onSelect={(e) => setSelectedId(e)}
             image="https://unsplash.it/1200/600"
             ref={annotationRef}
           />

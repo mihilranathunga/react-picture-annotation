@@ -43,7 +43,7 @@ interface IStageState {
 const defaultState: IStageState = {
   scale: 1,
   originX: 0,
-  originY: 0
+  originY: 0,
 };
 
 export default class ReactPictureAnnotation extends React.Component<
@@ -66,7 +66,7 @@ export default class ReactPictureAnnotation extends React.Component<
       return;
     }
     return this.props.annotationData.find(
-      el => el.id === this.selectedIdTrueValue
+      (el) => el.id === this.selectedIdTrueValue
     );
   }
   public static defaultProps = {
@@ -84,7 +84,7 @@ export default class ReactPictureAnnotation extends React.Component<
       />
     ),
     editable: false,
-    drawLabel: true
+    drawLabel: true,
   };
 
   public shapes: IShape[] = [];
@@ -94,9 +94,9 @@ export default class ReactPictureAnnotation extends React.Component<
   public state = {
     inputPosition: {
       left: 0,
-      top: 0
+      top: 0,
     },
-    showInput: false
+    showInput: false,
   };
   private currentAnnotationData: IAnnotation[] = [];
   private selectedIdTrueValue: string | null = null;
@@ -161,19 +161,21 @@ export default class ReactPictureAnnotation extends React.Component<
         this._PDF_DOC = undefined;
       }
     }
-    if (prevProps.image !== image || prevProps.pdf !== pdf) {
+    if (image && prevProps.image !== image) {
       this.cleanImage();
-      if (this.currentImageElement) {
-        if (image) {
-          this.currentImageElement.src = image;
-        }
+      if (!this.currentImageElement) {
+        this.reset();
+      }
+      if (this.currentImageElement && image) {
+        this.currentImageElement.src = image;
       }
     }
-    if (prevProps.pdf !== pdf || (prevProps.page !== page && pdf)) {
-      if (this.currentImageElement) {
-        if (this._PDF_DOC) {
-          this.currentImageElement.src = await this.loadPDFPage();
-        }
+    if (pdf && (prevProps.pdf !== pdf || prevProps.page !== page)) {
+      if (!this.currentImageElement) {
+        this.reset();
+      }
+      if (this.currentImageElement && this._PDF_DOC) {
+        this.currentImageElement.src = await this.loadPDFPage();
       }
     }
 
@@ -191,7 +193,7 @@ export default class ReactPictureAnnotation extends React.Component<
     const { originX, originY, scale } = this.scaleState;
     return {
       positionX: (positionX - originX) / scale,
-      positionY: (positionY - originY) / scale
+      positionY: (positionY - originY) / scale,
     };
   };
 
@@ -202,7 +204,7 @@ export default class ReactPictureAnnotation extends React.Component<
       x: x * scale + originX,
       y: y * scale + originY,
       width: width * scale,
-      height: height * scale
+      height: height * scale,
     };
   };
 
@@ -316,14 +318,14 @@ export default class ReactPictureAnnotation extends React.Component<
                 ? { paddingTop: margin }
                 : { paddingBottom: margin }),
               ...(topOfMiddle && {
-                maxHeight: `calc(${this.props.height}px - ${y +
-                  height +
-                  2 * margin}px)`
+                maxHeight: `calc(${this.props.height}px - ${
+                  y + height + 2 * margin
+                }px)`,
               }),
               ...(!topOfMiddle && { maxHeight: `calc(${y - 2 * margin}px)` }),
               overflow: "visible",
-              zIndex: 1000
-            }
+              zIndex: 1000,
+            },
           });
         }
       }
@@ -331,12 +333,12 @@ export default class ReactPictureAnnotation extends React.Component<
       if (!hasSelectedItem) {
         this.setState({
           showInput: false,
-          inputComment: ""
+          inputComment: "",
         });
       }
     }
 
-    this.currentAnnotationData = this.shapes.map(item =>
+    this.currentAnnotationData = this.shapes.map((item) =>
       item.getAnnotationData()
     );
     const { onChange } = this.props;
@@ -349,13 +351,13 @@ export default class ReactPictureAnnotation extends React.Component<
     const { onAnnotationDelete, editable } = this.props;
     if (editable) {
       const deleteTarget = this.shapes.findIndex(
-        shape => shape.getAnnotationData().id === id
+        (shape) => shape.getAnnotationData().id === id
       );
       if (deleteTarget >= 0) {
         this.shapes.splice(deleteTarget, 1);
         this.onShapeChange();
         const annotation = this.shapes.find(
-          shape => shape.getAnnotationData().id === id
+          (shape) => shape.getAnnotationData().id === id
         );
         if (onAnnotationDelete && annotation) {
           onAnnotationDelete(annotation.getAnnotationData());
@@ -422,14 +424,14 @@ export default class ReactPictureAnnotation extends React.Component<
           this.scaleState = {
             originX: 0,
             originY: (canvasHeight - scale * height) / 2,
-            scale
+            scale,
           };
         } else {
           const scale = canvasHeight / height;
           this.scaleState = {
             originX: (canvasWidth - scale * width) / 2,
             originY: 0,
-            scale
+            scale,
           };
         }
       }
@@ -457,12 +459,14 @@ export default class ReactPictureAnnotation extends React.Component<
     if (annotationData) {
       const refreshShapesWithAnnotationData = () => {
         const nextShapes = annotationData.map(
-          eachAnnotationData =>
+          (eachAnnotationData) =>
             new RectShape(eachAnnotationData, this.onShapeChange)
         );
         this.shapes = nextShapes;
         if (
-          !nextShapes.find(el => el.getAnnotationData().id === this.selectedId)
+          !nextShapes.find(
+            (el) => el.getAnnotationData().id === this.selectedId
+          )
         ) {
           this.selectedId = null;
         }
@@ -474,7 +478,7 @@ export default class ReactPictureAnnotation extends React.Component<
       } else {
         for (const annotationDataItem of annotationData) {
           const targetShape = this.shapes.find(
-            item => item.getAnnotationData().id === annotationDataItem.id
+            (item) => item.getAnnotationData().id === annotationDataItem.id
           );
           if (
             targetShape &&
@@ -519,7 +523,7 @@ export default class ReactPictureAnnotation extends React.Component<
   private onInputCommentChange = (comment: string) => {
     if (this.props.editable) {
       const selectedShapeIndex = this.shapes.findIndex(
-        item => item.getAnnotationData().id === this.selectedId
+        (item) => item.getAnnotationData().id === this.selectedId
       );
       this.shapes[selectedShapeIndex].getAnnotationData().comment = comment;
       this.selectedId = null;
@@ -573,7 +577,7 @@ export default class ReactPictureAnnotation extends React.Component<
     return "";
   };
 
-  private onMouseDown: MouseEventHandler<HTMLCanvasElement> = event => {
+  private onMouseDown: MouseEventHandler<HTMLCanvasElement> = (event) => {
     const { editable } = this.props;
     const { offsetX, offsetY } = event.nativeEvent;
     const { positionX, positionY } = this.calculateMousePosition(
@@ -587,7 +591,7 @@ export default class ReactPictureAnnotation extends React.Component<
     }
   };
 
-  private onMouseMove: MouseEventHandler<HTMLCanvasElement> = event => {
+  private onMouseMove: MouseEventHandler<HTMLCanvasElement> = (event) => {
     const { offsetX, offsetY } = event.nativeEvent;
     const { positionX, positionY } = this.calculateMousePosition(
       offsetX,
@@ -614,7 +618,7 @@ export default class ReactPictureAnnotation extends React.Component<
     this.startDrag = undefined;
   };
 
-  private onTouchStart: TouchEventHandler<HTMLCanvasElement> = event => {
+  private onTouchStart: TouchEventHandler<HTMLCanvasElement> = (event) => {
     const { editable } = this.props;
     const { clientX, clientY } = event.touches[0];
     const { positionX, positionY } = this.calculateMousePosition(
@@ -638,7 +642,7 @@ export default class ReactPictureAnnotation extends React.Component<
     tryCancelEvent(event);
   };
 
-  private onTouchMove: TouchEventHandler<HTMLCanvasElement> = event => {
+  private onTouchMove: TouchEventHandler<HTMLCanvasElement> = (event) => {
     const { editable } = this.props;
     const { clientX, clientY } = event.touches[0];
     const { positionX, positionY } = this.calculateMousePosition(
@@ -764,7 +768,7 @@ export const getPinchMidpoint = (touches: React.TouchList) => {
   const touch2 = touches[1];
   return {
     x: (touch1.clientX + touch2.clientX) / 2,
-    y: (touch1.clientY + touch2.clientY) / 2
+    y: (touch1.clientY + touch2.clientY) / 2,
   };
 };
 
