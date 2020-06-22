@@ -34,6 +34,7 @@ interface IReactPictureAnnotationProps {
   onAnnotationCreate?: (annotation: IAnnotation) => void;
   onAnnotationDelete?: (annotation: IAnnotation) => void;
   onPDFLoaded?: (props: { pages: number }) => void;
+  onLoading: (loading: boolean) => void;
 }
 
 interface IStageState {
@@ -89,6 +90,7 @@ export default class ReactPictureAnnotation extends React.Component<
     creatable: false,
     drawLabel: true,
     usePercentage: true,
+    onLoading: () => true,
   };
 
   public shapes: IShape[] = [];
@@ -466,6 +468,7 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   public reset = async () => {
+    this.props.onLoading(true);
     const nextImageNode =
       this.currentImageElement || document.createElement("img");
     const loadProperDimentions = () => {
@@ -507,6 +510,7 @@ export default class ReactPictureAnnotation extends React.Component<
         nextImageNode.src = await this.loadPDFPage();
       }
     }
+    this.props.onLoading(false);
   };
 
   private syncAnnotationData = () => {
@@ -622,7 +626,9 @@ export default class ReactPictureAnnotation extends React.Component<
   private loadPDFPage = async (pageNum = (this.props.page || 0) + 1) => {
     if (this._PDF_DOC) {
       const page = await this._PDF_DOC.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 4000 / page.view[3] });
+      const viewport = page.getViewport({
+        scale: this.props.width / page.view[2],
+      });
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d")!;
 
@@ -630,8 +636,9 @@ export default class ReactPictureAnnotation extends React.Component<
       canvas.width = viewport.width;
 
       await page.render({ canvasContext: ctx, viewport }).promise;
+      const data = canvas.toDataURL("image/png", 1);
 
-      return canvas.toDataURL("image/png", 1);
+      return data;
     }
     return "";
   };
