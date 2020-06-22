@@ -12,15 +12,15 @@ export default class CreatingAnnotationState implements IAnnotationState {
     const { shapes, onShapeChange } = this.context;
     if (shapes.length > 0) {
       const currentShape = shapes.find(
-        el => el.getAnnotationData().id === this.context.pendingShapeId
+        (el) => el.getAnnotationData().id === this.context.pendingShapeId
       );
       if (currentShape) {
         const {
-          mark: { x, y }
+          mark: { x, y },
         } = currentShape.getAnnotationData();
         currentShape.adjustMark({
           width: positionX - x,
-          height: positionY - y
+          height: positionY - y,
         });
       }
     }
@@ -33,10 +33,11 @@ export default class CreatingAnnotationState implements IAnnotationState {
       onShapeChange,
       setAnnotationState,
       onDelete,
-      props: { onAnnotationCreate }
+      getOriginalImageSize,
+      props: { onAnnotationCreate, usePercentage },
     } = this.context;
     const data = shapes.find(
-      el => el.getAnnotationData().id === this.context.pendingShapeId
+      (el) => el.getAnnotationData().id === this.context.pendingShapeId
     );
     if (data) {
       if (
@@ -45,7 +46,14 @@ export default class CreatingAnnotationState implements IAnnotationState {
         data.getAnnotationData().mark.height !== 0
       ) {
         // make sure width, height are positive numbers
-        const { x, y, width, height } = data.getAnnotationData().mark;
+        let { x, y, width, height } = data.getAnnotationData().mark;
+        if (usePercentage) {
+          const origSize = getOriginalImageSize();
+          x = x / origSize.width;
+          y = y / origSize.height;
+          width = width / origSize.width;
+          height = height / origSize.height;
+        }
         data.getAnnotationData().mark.x = x + Math.min(0, width);
         data.getAnnotationData().mark.y = y + Math.min(0, height);
         data.getAnnotationData().mark.width = Math.abs(width);

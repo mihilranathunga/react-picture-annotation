@@ -7,6 +7,53 @@ import { ReactPictureAnnotation } from "../src";
 import { IAnnotation } from "../src/Annotation";
 import { IShapeData } from "../src/Shape";
 
+const defaultAnnotations = [
+  {
+    id: "a",
+    comment: "Hello World",
+    mark: {
+      type: "RECT",
+      width: 161,
+      height: 165,
+      x: 229,
+      y: 92,
+    },
+  },
+  {
+    id: "b",
+    comment: "Hello World",
+    mark: {
+      type: "RECT",
+      width: 161,
+      height: 165,
+      x: 0,
+      y: 0,
+    },
+  },
+  {
+    id: "test",
+    comment: "percentages",
+    mark: {
+      type: "RECT",
+      width: 0.2,
+      height: 0.2,
+      x: 0.4,
+      y: 0.4,
+    },
+  },
+  {
+    id: "test2",
+    comment: "percentages 2 ",
+    mark: {
+      type: "RECT",
+      width: 0.5,
+      height: 0.1,
+      x: 0.1,
+      y: 0.5,
+    },
+  },
+];
+
 addDecorator((storyFn) => <div>{storyFn()}</div>);
 
 storiesOf("Annotator", module)
@@ -20,19 +67,7 @@ storiesOf("Annotator", module)
 
       const [annotationData, setAnnotationData] = useState<
         IAnnotation<IShapeData>[]
-      >([
-        {
-          id: "a",
-          comment: "Hello World",
-          mark: {
-            type: "RECT",
-            width: 161,
-            height: 165,
-            x: 229,
-            y: 92,
-          },
-        },
-      ]);
+      >(defaultAnnotations);
 
       const [selectedId, setSelectedId] = useState<string | null>("a");
 
@@ -76,19 +111,7 @@ storiesOf("Annotator", module)
 
       const [annotationData, setAnnotationData] = useState<
         IAnnotation<IShapeData>[]
-      >([
-        {
-          id: "a",
-          comment: "Hello World",
-          mark: {
-            type: "RECT",
-            width: 161,
-            height: 165,
-            x: 229,
-            y: 92,
-          },
-        },
-      ]);
+      >(defaultAnnotations);
 
       const [selectedId, setSelectedId] = useState<string | null>("a");
       const [page, setPage] = useState<number>(0);
@@ -290,19 +313,7 @@ storiesOf("Annotator", module)
 
       const [annotationData, setAnnotationData] = useState<
         IAnnotation<IShapeData>[]
-      >([
-        {
-          id: "a",
-          comment: "HA HA HA",
-          mark: {
-            type: "RECT",
-            width: 161,
-            height: 165,
-            x: 229,
-            y: 92,
-          },
-        },
-      ]);
+      >(defaultAnnotations);
 
       const [selectedId, setSelectedId] = useState<string | null>("a");
 
@@ -329,6 +340,50 @@ storiesOf("Annotator", module)
           selectedId={selectedId}
           onSelect={(e) => setSelectedId(e)}
           editable={true}
+          image="https://unsplash.it/1200/600"
+        />
+      );
+    };
+
+    return <AnnotationComponent />;
+  })
+  .add("Creatable", () => {
+    const AnnotationComponent = () => {
+      const [size, setSize] = useState({
+        width: window.innerWidth - 16,
+        height: window.innerHeight - 16,
+      });
+
+      const [annotationData, setAnnotationData] = useState<
+        IAnnotation<IShapeData>[]
+      >(defaultAnnotations);
+
+      const [selectedId, setSelectedId] = useState<string | null>("a");
+
+      const onResize = () => {
+        setSize({
+          width: window.innerWidth - 16,
+          height: window.innerHeight - 16,
+        });
+      };
+
+      useEffect(() => {
+        window.addEventListener("resize", onResize);
+        return () => {
+          window.removeEventListener("resize", onResize);
+        };
+      }, []);
+
+      return (
+        <ReactPictureAnnotation
+          width={size.width}
+          height={size.height}
+          annotationData={annotationData}
+          onChange={(data) => setAnnotationData(data)}
+          selectedId={selectedId}
+          onSelect={(e) => setSelectedId(e)}
+          creatable={true}
+          editable={false}
           image="https://unsplash.it/1200/600"
         />
       );

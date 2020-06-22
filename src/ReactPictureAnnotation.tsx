@@ -16,10 +16,12 @@ interface IReactPictureAnnotationProps {
   onSelect: (id: string | null) => void;
   width: number;
   height: number;
+  usePercentage?: boolean;
   page?: number;
   image?: string;
   pdf?: string;
   editable: boolean;
+  creatable?: boolean;
   hoverable?: boolean;
   drawLabel: boolean;
   renderItemPreview: (
@@ -84,7 +86,9 @@ export default class ReactPictureAnnotation extends React.Component<
       />
     ),
     editable: false,
+    creatable: false,
     drawLabel: true,
+    usePercentage: true,
   };
 
   public shapes: IShape[] = [];
@@ -197,9 +201,52 @@ export default class ReactPictureAnnotation extends React.Component<
     };
   };
 
+  public getOriginalImageSize = (): { width: number; height: number } => {
+    if (this.currentImageElement) {
+      return {
+        width: this.currentImageElement.width,
+        height: this.currentImageElement.height,
+      };
+    }
+    return {
+      width: 1,
+      height: 1,
+    };
+  };
+
+  public calculateShapePositionNoOffset = (
+    shapeData: IShapeBase
+  ): IShapeBase => {
+    const { x, y, width, height } = shapeData;
+    let scaledX = x;
+    let scaledWidth = width;
+    let scaledY = y;
+    let scaledHeight = height;
+    if (
+      this.currentImageElement &&
+      width < 1 &&
+      height < 1 &&
+      width > 0 &&
+      height > 0
+    ) {
+      scaledX = x * this.currentImageElement.width;
+      scaledWidth = width * this.currentImageElement.width;
+      scaledY = y * this.currentImageElement.height;
+      scaledHeight = height * this.currentImageElement.height;
+    }
+    return {
+      x: scaledX,
+      y: scaledY,
+      width: scaledWidth,
+      height: scaledHeight,
+    };
+  };
+
   public calculateShapePosition = (shapeData: IShapeBase): IShapeBase => {
     const { originX, originY, scale } = this.scaleState;
-    const { x, y, width, height } = shapeData;
+    const { x, y, width, height } = this.calculateShapePositionNoOffset(
+      shapeData
+    );
     return {
       x: x * scale + originX,
       y: y * scale + originY,
@@ -272,6 +319,10 @@ export default class ReactPictureAnnotation extends React.Component<
 
       let hasSelectedItem = false;
 
+      if (this.getOriginalImageSize().width === 1) {
+        return;
+      }
+
       for (const item of this.shapes) {
         const isSelected = item.getAnnotationData().id === this.selectedId;
         const { x, y, height, width } = item.paint(
@@ -288,7 +339,9 @@ export default class ReactPictureAnnotation extends React.Component<
           ) {
             this.currentTransformer = new Transformer(
               item,
-              this.props.editable
+              this.props.editable,
+              this.getOriginalImageSize,
+              this.calculateShapePositionNoOffset
             );
           }
 
@@ -313,7 +366,9 @@ export default class ReactPictureAnnotation extends React.Component<
                 ? { left: x }
                 : { right: containerWidth - (x + width) }),
               // ...(leftOfMiddle?{paddingLeft: margin}:{paddingRight:margin}),
-              ...(topOfMiddle ? { top: y + height } : { bottom: -y }),
+              ...(topOfMiddle
+                ? { top: y + height + strokeWidth }
+                : { bottom: -y + strokeWidth }),
               ...(topOfMiddle
                 ? { paddingTop: margin }
                 : { paddingBottom: margin }),
@@ -460,7 +515,11 @@ export default class ReactPictureAnnotation extends React.Component<
       const refreshShapesWithAnnotationData = () => {
         const nextShapes = annotationData.map(
           (eachAnnotationData) =>
-            new RectShape(eachAnnotationData, this.onShapeChange)
+            new RectShape(
+              eachAnnotationData,
+              this.onShapeChange,
+              this.getOriginalImageSize
+            )
         );
         this.shapes = nextShapes;
         if (
@@ -563,7 +622,7 @@ export default class ReactPictureAnnotation extends React.Component<
   private loadPDFPage = async (pageNum = (this.props.page || 0) + 1) => {
     if (this._PDF_DOC) {
       const page = await this._PDF_DOC.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 5 });
+      const viewport = page.getViewport({ scale: 4000 / page.view[3] });
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d")!;
 
@@ -578,14 +637,14 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   private onMouseDown: MouseEventHandler<HTMLCanvasElement> = (event) => {
-    const { editable } = this.props;
+    const { editable, creatable } = this.props;
     const { offsetX, offsetY } = event.nativeEvent;
     const { positionX, positionY } = this.calculateMousePosition(
       offsetX,
       offsetY
     );
     this.currentAnnotationState.onMouseDown(positionX, positionY);
-    if (!editable || event.shiftKey) {
+    if (!(creatable || editable) || event.shiftKey) {
       const { originX, originY } = this.scaleState;
       this.startDrag = { x: offsetX, y: offsetY, originX, originY };
     }

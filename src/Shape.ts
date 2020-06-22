@@ -10,7 +10,7 @@ export const shapeStyle = {
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', Helvetica, Arial, sans-serif",
   shapeBackground: "hsla(210, 16%, 93%, 0.2)",
   shapeStrokeStyle: "ff0000",
-  shapeShadowStyle: "hsla(210, 9%, 31%, 0.35)"
+  shapeShadowStyle: "hsla(210, 9%, 31%, 0.35)",
 };
 
 export interface IShapeBase {
@@ -40,6 +40,7 @@ export interface IShape {
   checkBoundary: (
     positionX: number,
     positionY: number,
+    calculateTruePositionNoTransform: (shapeData: IShapeBase) => IShapeBase,
     padding?: number
   ) => boolean;
   paint: (
@@ -59,25 +60,49 @@ export class RectShape implements IShape {
 
   private onChangeCallBack: () => void;
 
+  private getImageSize: () => { width: number; height: number };
+
   private dragStartOffset: { offsetX: number; offsetY: number };
 
-  constructor(data: IAnnotation<IShapeData>, onChange: () => void) {
+  constructor(
+    data: IAnnotation<IShapeData>,
+    onChange: () => void,
+    getImageSize: () => { width: number; height: number }
+  ) {
     this.annotationData = data;
     this.onChangeCallBack = onChange;
+    this.getImageSize = getImageSize;
   }
 
   public onDragStart = (positionX: number, positionY: number) => {
-    const { x, y } = this.annotationData.mark;
-    this.dragStartOffset = {
-      offsetX: positionX - x,
-      offsetY: positionY - y
-    };
+    const { x, y, width, height } = this.annotationData.mark;
+    if (width < 1 && height < 1) {
+      const imageSize = this.getImageSize();
+      this.dragStartOffset = {
+        offsetX: positionX / imageSize.width - x,
+        offsetY: positionY / imageSize.height - y,
+      };
+    } else {
+      this.dragStartOffset = {
+        offsetX: positionX - x,
+        offsetY: positionY - y,
+      };
+    }
   };
 
   public onDrag = (positionX: number, positionY: number) => {
     if (this.dragStartOffset) {
-      this.annotationData.mark.x = positionX - this.dragStartOffset.offsetX;
-      this.annotationData.mark.y = positionY - this.dragStartOffset.offsetY;
+      const { width, height } = this.annotationData.mark;
+      if (width < 1 && height < 1) {
+        const imageSize = this.getImageSize();
+        this.annotationData.mark.x =
+          positionX / imageSize.width - this.dragStartOffset.offsetX;
+        this.annotationData.mark.y =
+          positionY / imageSize.height - this.dragStartOffset.offsetY;
+      } else {
+        this.annotationData.mark.x = positionX - this.dragStartOffset.offsetX;
+        this.annotationData.mark.y = positionY - this.dragStartOffset.offsetY;
+      }
       this.onChangeCallBack();
     }
   };
@@ -85,11 +110,12 @@ export class RectShape implements IShape {
   public checkBoundary = (
     positionX: number,
     positionY: number,
+    calculateTruePosition: (shapeData: IShapeBase) => IShapeBase,
     padding = 0
   ) => {
-    const {
-      mark: { x, y, width, height }
-    } = this.annotationData;
+    const { x, y, width, height } = calculateTruePosition(
+      this.annotationData.mark
+    );
 
     if (
       ((positionX > x - padding && positionX < x + width + padding) ||
@@ -162,18 +188,20 @@ export class RectShape implements IShape {
     x = this.annotationData.mark.x,
     y = this.annotationData.mark.y,
     width = this.annotationData.mark.width,
-    height = this.annotationData.mark.height
+    height = this.annotationData.mark.height,
   }: {
     x?: number;
     y?: number;
     width?: number;
     height?: number;
   }) => {
-    this.annotationData.mark.x = x;
-    this.annotationData.mark.y = y;
-    this.annotationData.mark.width = width;
-    this.annotationData.mark.height = height;
-    this.onChangeCallBack();
+    if (width > 0 && height > 0) {
+      this.annotationData.mark.x = x;
+      this.annotationData.mark.y = y;
+      this.annotationData.mark.width = width;
+      this.annotationData.mark.height = height;
+      this.onChangeCallBack();
+    }
   };
 
   public getAnnotationData = () => {
