@@ -627,7 +627,7 @@ export default class ReactPictureAnnotation extends React.Component<
     if (this._PDF_DOC) {
       const page = await this._PDF_DOC.getPage(pageNum);
       const viewport = page.getViewport({
-        scale: this.props.width / page.view[2],
+        scale: this.props.width / (page.view[2] / 4),
       });
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d")!;
