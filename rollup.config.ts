@@ -28,11 +28,11 @@ export default {
     include: "src/**"
   },
   plugins: [
-    url({ exclude: ["**/*.svg"] }),
     external(),
     postcss({
       modules: false
     }),
+    url({ exclude: ["**/*.svg"] }),
     svgr(),
     resolve({ extensions }),
     // Allow json resolution
