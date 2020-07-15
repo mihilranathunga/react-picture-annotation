@@ -682,4 +682,62 @@ storiesOf("Annotator", module)
     };
 
     return <AnnotationComponent />;
+  })
+  .add("Download", () => {
+    const AnnotationComponent = () => {
+      const [size, setSize] = useState({
+        width: window.innerWidth - 16,
+        height: window.innerHeight - 16,
+      });
+
+      const [annotationData, setAnnotationData] = useState<
+        IAnnotation<IShapeData>[]
+      >(defaultAnnotations);
+
+      const [selectedId, setSelectedId] = useState<string | null>("a");
+
+      const onResize = () => {
+        setSize({
+          width: window.innerWidth - 16,
+          height: window.innerHeight - 16,
+        });
+      };
+
+      useEffect(() => {
+        window.addEventListener("resize", onResize);
+        return () => {
+          window.removeEventListener("resize", onResize);
+        };
+      }, []);
+
+      const annotationRef = React.createRef<ReactPictureAnnotation>();
+
+      return (
+        <>
+          <ReactPictureAnnotation
+            width={size.width}
+            height={size.height}
+            annotationData={annotationData}
+            onChange={(data) => setAnnotationData(data)}
+            selectedId={selectedId}
+            onSelect={(e) => setSelectedId(e)}
+            pdf="https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf"
+            ref={annotationRef}
+          />
+          <div style={{ position: "absolute", zIndex: 1000 }}>
+            <button
+              onClick={() => {
+                if (annotationRef.current) {
+                  annotationRef.current.downloadFile("sample.pdf");
+                }
+              }}
+            >
+              Download
+            </button>
+          </div>
+        </>
+      );
+    };
+
+    return <AnnotationComponent />;
   });
