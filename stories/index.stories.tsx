@@ -577,7 +577,7 @@ storiesOf("Annotator", module)
           ...el,
           mark: {
             ...el.mark,
-            draw: (canvas, x, y, w, h, scale) => {
+            draw: (canvas, x, y, _, _2, scale) => {
               const fontSize = 16 * (scale || 0);
               canvas.font = `${fontSize}px verdana`;
 
@@ -725,7 +725,21 @@ storiesOf("Annotator", module)
 
     const [annotationData, setAnnotationData] = useState<
       IAnnotation<IShapeData>[]
-    >(defaultAnnotations);
+    >(
+      defaultAnnotations.map((el) => ({
+        ...el,
+        mark: {
+          ...el.mark,
+          draw: (canvas, x, y, _, _2, scale) => {
+            const fontSize = 16 * (scale || 1);
+            canvas.font = `${fontSize}px verdana`;
+
+            canvas.fillStyle = "#000000";
+            canvas.fillText("Scaled text", x, y);
+          },
+        },
+      }))
+    );
 
     const [selectedId, setSelectedId] = useState<string | null>("a");
 
@@ -757,7 +771,7 @@ storiesOf("Annotator", module)
             setSelectedId(e);
             action("onSelect")(e);
           }}
-          pdf="https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf"
+          pdf="http://localhost:5000/OAO-ASDAA-05-00001-0001 copy.pdf"
           ref={annotationRef}
         />
         <div style={{ position: "absolute", zIndex: 1000 }}>

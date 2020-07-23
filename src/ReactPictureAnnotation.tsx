@@ -1,6 +1,6 @@
 import React, { MouseEventHandler, TouchEventHandler } from "react";
 import pdfjs from "pdfjs-dist";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, rgb, PDFPage, degrees } from "pdf-lib";
 import parseColor from "parse-color";
 import { IAnnotation } from "./Annotation";
 import { IAnnotationState } from "./annotation/AnnotationState";
@@ -532,40 +532,122 @@ export default class ReactPictureAnnotation extends React.Component<
 
     // Get the first page of the document
     const pages = pdfDoc.getPages();
-    const currentPage = pages[this.props.page ? this.props.page - 1 : 0];
+    const pageNum = this.props.page ? this.props.page - 1 : 0;
+    const currentPage = pages[pageNum];
+
+    const fontSize = 12;
+    const pageRotation = this.getPageRotation(currentPage) % 360;
 
     // Get the width and height of the first page
     const { width: pageWidth, height: pageHeight } = currentPage.getSize();
     if (annotationData) {
-      annotationData.forEach((el) => {
-        const color = parseColor(el.mark.strokeColor || "grey").rgb;
+      await Promise.all(
+        annotationData.map(async (el) => {
+          const color = parseColor(el.mark.strokeColor || "grey").rgb;
 
-        let { x, y, width, height } = this.calculateShapePositionNoOffset(
-          el.mark
-        );
+          let { x, y, width, height } = this.calculateShapePositionNoOffset(
+            el.mark
+          );
 
-        x = x / this.currentImageElement!.width;
-        width = width / this.currentImageElement!.width;
-        y = y / this.currentImageElement!.height;
-        height = height / this.currentImageElement!.height;
-        if (drawText) {
-          currentPage.drawText(el.comment || "annotation", {
-            x: x * pageWidth + 2,
-            y: pageHeight - (y + height) * pageHeight - 12,
-            size: 12,
-          });
-        }
-        if (drawBox) {
-          currentPage.drawRectangle({
-            x: x * pageWidth,
-            y: pageHeight - y * pageHeight,
-            width: width * pageWidth,
-            height: -height * pageHeight,
-            borderWidth: el.mark.strokeWidth || 2,
-            borderColor: rgb(color[0] / 255, color[1] / 255, color[2] / 255),
-          });
-        }
-      });
+          x = x / this.currentImageElement!.width;
+          width = width / this.currentImageElement!.width;
+          y = y / this.currentImageElement!.height;
+          height = height / this.currentImageElement!.height;
+
+          // rotations are dumb!
+          // const rotationRads = pageRotation * Math.PI / 180;
+
+          // These coords are now from bottom/left
+          const coordsFromBottomLeft: { x: number; y: number } = {
+            x,
+            y: 1 - y,
+          };
+          // if(pageRotation === 90 || pageRotation === 270){
+          //   coordsFromBottomLeft.y = width - ((y + fontSize) / this.currentImageElement!.height);
+          // } else{
+          //   coordsFromBottomLeft.y = height - ((y + fontSize) / this.currentImageElement!.height);
+          // }
+
+          let drawX = null;
+          let drawY = null;
+          if (pageRotation === 90) {
+            drawX = 1 - coordsFromBottomLeft.y;
+            drawY = coordsFromBottomLeft.x;
+            const tmpWidth = width;
+            width = height;
+            height = -tmpWidth;
+          } else if (pageRotation === 180) {
+            drawX = 1 - coordsFromBottomLeft.x;
+            drawY = 1 - coordsFromBottomLeft.y;
+            height = -height;
+            width = -width;
+          } else if (pageRotation === 270) {
+            drawX = coordsFromBottomLeft.y;
+            drawY = 1 - coordsFromBottomLeft.x;
+            const tmpWidth = width;
+            width = -height;
+            height = tmpWidth;
+          } else {
+            // no rotation
+            drawX = coordsFromBottomLeft.x;
+            drawY = coordsFromBottomLeft.y;
+          }
+
+          const noXYRotate = !(pageRotation === 90 || pageRotation === 270);
+          if (el.mark.draw) {
+            const { scale } = this.scaleState;
+
+            const { canvas, ctx } = this.createContext(
+              await this._PDF_DOC!.getPage(pageNum + 1)
+            );
+            el.mark.draw(
+              ctx,
+              0,
+              0,
+              width * pageWidth,
+              height * pageHeight,
+              scale
+            );
+
+            const jpegData = canvas.toDataURL("image/jpeg");
+            const jpgImage = await pdfDoc.embedJpg(jpegData);
+
+            currentPage.drawImage(jpgImage, {
+              x: (drawX + (noXYRotate ? 0 : width)) * pageWidth,
+              y: (drawY + (noXYRotate ? -height : 0)) * pageHeight,
+              width: width * pageWidth,
+              height: height * pageHeight,
+            });
+          } else {
+            if (!!el.comment && drawText) {
+              currentPage.drawText(el.comment, {
+                x:
+                  (drawX + (noXYRotate ? 0 : width)) * pageWidth +
+                  (noXYRotate ? 2 : -fontSize),
+                y:
+                  (drawY + (noXYRotate ? -height : 0)) * pageHeight +
+                  (noXYRotate ? -fontSize : -2),
+                size: fontSize,
+                rotate: degrees(pageRotation),
+              });
+            }
+            if (drawBox) {
+              currentPage.drawRectangle({
+                x: drawX * pageWidth,
+                y: drawY * pageHeight,
+                width: width * pageWidth,
+                height: -height * pageHeight,
+                borderWidth: el.mark.strokeWidth || 2,
+                borderColor: rgb(
+                  color[0] / 255,
+                  color[1] / 255,
+                  color[2] / 255
+                ),
+              });
+            }
+          }
+        })
+      );
     }
 
     // Draw a string of text diagonally across the first page
@@ -699,24 +781,31 @@ export default class ReactPictureAnnotation extends React.Component<
     }
   };
 
+  private createContext = (page: pdfjs.PDFPageProxy) => {
+    const viewport = page.getViewport({
+      scale: Math.min(
+        Math.max(
+          this.props.width / (page.view[2] / 4),
+          this.props.height / (page.view[3] / 4),
+          1
+        ),
+        8
+      ),
+    });
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+
+    return { canvas, ctx, viewport };
+  };
+
   private loadPDFPage = async (pageNum = this.props.page || 1) => {
     if (this._PDF_DOC) {
       const page = await this._PDF_DOC.getPage(pageNum);
-      const viewport = page.getViewport({
-        scale: Math.min(
-          Math.max(
-            this.props.width / (page.view[2] / 4),
-            this.props.height / (page.view[3] / 4),
-            1
-          ),
-          8
-        ),
-      });
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d")!;
 
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+      const { canvas, ctx, viewport } = this.createContext(page);
 
       await page.render({ canvasContext: ctx, viewport }).promise;
       const data = canvas.toDataURL("image/png", 1);
@@ -909,6 +998,23 @@ export default class ReactPictureAnnotation extends React.Component<
       this.onShapeChange();
       this.onImageChange();
     });
+  };
+
+  private getPageRotation = (page: PDFPage) => {
+    let rotation: number = 0;
+
+    // Check for Rotate on the page itself
+    const isRotated = !!page.getRotation();
+    if (isRotated) {
+      rotation = page.getRotation().angle;
+    }
+
+    // A rotation of 0 is the default
+    if (rotation === undefined) {
+      rotation = 0;
+    }
+
+    return rotation;
   };
 }
 

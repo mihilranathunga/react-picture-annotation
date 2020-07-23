@@ -11,3 +11,5 @@ update_configs:
     default_labels:
       - 'auto-update'
       - 'auto-merge'
+    default_reviewers:
+      - 'dlcognite'
