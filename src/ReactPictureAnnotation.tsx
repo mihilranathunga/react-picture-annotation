@@ -477,6 +477,7 @@ export default class ReactPictureAnnotation extends React.Component<
     this.props.onLoading(true);
     const nextImageNode =
       this.currentImageElement || document.createElement("img");
+    nextImageNode.crossOrigin = "anonymous";
     const loadProperDimentions = () => {
       const { width, height } = nextImageNode;
       const imageNodeRatio = height / width;
@@ -642,7 +643,6 @@ export default class ReactPictureAnnotation extends React.Component<
         })
       );
     }
-    document.body.append(bCanvas);
 
     // draw custom ones
     if (drawCustom) {
@@ -684,6 +684,39 @@ export default class ReactPictureAnnotation extends React.Component<
       setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     }
     return pdfDoc;
+  };
+
+  public extractFromCanvas = (
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => {
+    if (this.currentImageElement) {
+      const resultSize = this.calculateShapePositionNoOffset({
+        x,
+        y,
+        width,
+        height,
+      });
+      const bCanvas = document.createElement("canvas");
+      bCanvas.height = resultSize.height;
+      bCanvas.width = resultSize.width;
+      const bCtx = bCanvas.getContext("2d")!;
+      bCtx.drawImage(
+        this.currentImageElement,
+        resultSize.x,
+        resultSize.y,
+        resultSize.width,
+        resultSize.height,
+        0,
+        0,
+        resultSize.width,
+        resultSize.height
+      );
+      return bCanvas.toDataURL("image/png");
+    }
+    return "";
   };
 
   private syncAnnotationData = () => {

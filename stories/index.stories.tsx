@@ -739,6 +739,68 @@ storiesOf("Annotator", module)
       </Wrapper>
     );
   })
+  .add("Extract From Canvas", () => {
+    const [size, setSize] = useState({
+      width: window.innerWidth - 16,
+      height: window.innerHeight - 16,
+    });
+
+    const [annotationData, setAnnotationData] = useState<
+      IAnnotation<IShapeData>[]
+    >([defaultAnnotations[0]]);
+
+    const [src, setSrc] = useState<string | undefined>(undefined);
+
+    const onResize = () => {
+      setSize({
+        width: window.innerWidth - 16,
+        height: window.innerHeight - 16,
+      });
+    };
+
+    useEffect(() => {
+      window.addEventListener("resize", onResize);
+      return () => {
+        window.removeEventListener("resize", onResize);
+      };
+    }, []);
+
+    const annotationRef = React.createRef<ReactPictureAnnotation>();
+
+    return (
+      <Wrapper>
+        <ReactPictureAnnotation
+          width={size.width}
+          height={size.height}
+          annotationData={annotationData}
+          onChange={(data) => setAnnotationData(data)}
+          creatable={true}
+          onSelect={(e) => {
+            action("onSelect")(e);
+          }}
+          image="https://unsplash.it/1200/600"
+          ref={annotationRef}
+        />
+        <div style={{ position: "absolute", zIndex: 1000 }}>
+          <button
+            onClick={() => {
+              if (annotationRef.current) {
+                const { x, y, width, height } = annotationData[
+                  annotationData.length - 1
+                ].mark;
+                setSrc(
+                  annotationRef.current.extractFromCanvas(x, y, width, height)
+                );
+              }
+            }}
+          >
+            Get Image
+          </button>
+          <img src={src} style={{ width: 100, height: "auto" }} />
+        </div>
+      </Wrapper>
+    );
+  })
   .add("Download", () => {
     const [size, setSize] = useState({
       width: window.innerWidth - 16,
@@ -839,4 +901,7 @@ storiesOf("Annotator", module)
 const Wrapper = styled.div`
   height: 800px;
   width: 100%;
+  position: relative;
+  display: block;
+  overflow: hidden;
 `;
