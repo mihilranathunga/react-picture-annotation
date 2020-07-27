@@ -336,7 +336,8 @@ export default class ReactPictureAnnotation extends React.Component<
           this.calculateShapePosition,
           isSelected,
           this.props.drawLabel,
-          scale
+          scale,
+          false
         );
 
         if (isSelected) {
@@ -521,7 +522,9 @@ export default class ReactPictureAnnotation extends React.Component<
   public downloadFile = async (
     fileName: string,
     drawText: boolean = true,
-    drawBox: boolean = true
+    drawBox: boolean = true,
+    drawCustom: boolean = true,
+    immediateDownload: boolean = true
   ) => {
     if (!this._PDF_DOC || !this.currentImageElement) {
       return;
@@ -534,39 +537,40 @@ export default class ReactPictureAnnotation extends React.Component<
     const pages = pdfDoc.getPages();
     const pageNum = this.props.page ? this.props.page - 1 : 0;
     const currentPage = pages[pageNum];
-
     const fontSize = 12;
     const pageRotation = this.getPageRotation(currentPage) % 360;
 
     // Get the width and height of the first page
     const { width: pageWidth, height: pageHeight } = currentPage.getSize();
+
+    const DOWNLOAD_SCALE = 4;
+
+    const bCanvas = document.createElement("canvas");
+    const bCtx = bCanvas.getContext("2d")!;
+
+    bCanvas.width = pageWidth * DOWNLOAD_SCALE;
+    bCanvas.height = pageHeight * DOWNLOAD_SCALE;
+
     if (annotationData) {
       await Promise.all(
         annotationData.map(async (el) => {
-          const color = parseColor(el.mark.strokeColor || "grey").rgb;
+          const color = parseColor(el.mark.strokeColor || "blue").rgb;
 
           let { x, y, width, height } = this.calculateShapePositionNoOffset(
             el.mark
           );
 
-          x = x / this.currentImageElement!.width;
+          x = x / (this.currentImageElement?.width || 1);
           width = width / this.currentImageElement!.width;
-          y = y / this.currentImageElement!.height;
+          y = y / (this.currentImageElement?.height || 1);
           height = height / this.currentImageElement!.height;
-
           // rotations are dumb!
-          // const rotationRads = pageRotation * Math.PI / 180;
 
           // These coords are now from bottom/left
           const coordsFromBottomLeft: { x: number; y: number } = {
             x,
             y: 1 - y,
           };
-          // if(pageRotation === 90 || pageRotation === 270){
-          //   coordsFromBottomLeft.y = width - ((y + fontSize) / this.currentImageElement!.height);
-          // } else{
-          //   coordsFromBottomLeft.y = height - ((y + fontSize) / this.currentImageElement!.height);
-          // }
 
           let drawX = null;
           let drawY = null;
@@ -595,80 +599,91 @@ export default class ReactPictureAnnotation extends React.Component<
 
           const noXYRotate = !(pageRotation === 90 || pageRotation === 270);
           if (el.mark.draw) {
-            const { scale } = this.scaleState;
-
-            const { canvas, ctx } = this.createContext(
-              await this._PDF_DOC!.getPage(pageNum + 1)
-            );
+            const newX = drawX * pageWidth * DOWNLOAD_SCALE;
+            const newY = (1 - drawY) * pageHeight * DOWNLOAD_SCALE;
+            bCtx.translate(0, 0);
+            bCtx.save();
+            bCtx.translate(newX, newY);
+            bCtx.rotate((-pageRotation * Math.PI) / 180);
             el.mark.draw(
-              ctx,
+              bCtx,
               0,
               0,
-              width * pageWidth,
-              height * pageHeight,
-              scale
+              width * pageWidth * DOWNLOAD_SCALE,
+              height * pageHeight * DOWNLOAD_SCALE,
+              this.scaleState.scale * 2 * DOWNLOAD_SCALE,
+              true
             );
-
-            const jpegData = canvas.toDataURL("image/jpeg");
-            const jpgImage = await pdfDoc.embedJpg(jpegData);
-
-            currentPage.drawImage(jpgImage, {
-              x: (drawX + (noXYRotate ? 0 : width)) * pageWidth,
-              y: (drawY + (noXYRotate ? -height : 0)) * pageHeight,
-              width: width * pageWidth,
-              height: height * pageHeight,
+            bCtx.restore();
+            return;
+          }
+          if (!!el.comment && drawText) {
+            currentPage.drawText(el.comment, {
+              x:
+                (drawX + (noXYRotate ? 0 : width)) * pageWidth +
+                (noXYRotate ? 2 : -fontSize),
+              y:
+                (drawY + (noXYRotate ? -height : 0)) * pageHeight +
+                (noXYRotate ? -fontSize : -2),
+              size: fontSize,
+              rotate: degrees(pageRotation),
             });
-          } else {
-            if (!!el.comment && drawText) {
-              currentPage.drawText(el.comment, {
-                x:
-                  (drawX + (noXYRotate ? 0 : width)) * pageWidth +
-                  (noXYRotate ? 2 : -fontSize),
-                y:
-                  (drawY + (noXYRotate ? -height : 0)) * pageHeight +
-                  (noXYRotate ? -fontSize : -2),
-                size: fontSize,
-                rotate: degrees(pageRotation),
-              });
-            }
-            if (drawBox) {
-              currentPage.drawRectangle({
-                x: drawX * pageWidth,
-                y: drawY * pageHeight,
-                width: width * pageWidth,
-                height: -height * pageHeight,
-                borderWidth: el.mark.strokeWidth || 2,
-                borderColor: rgb(
-                  color[0] / 255,
-                  color[1] / 255,
-                  color[2] / 255
-                ),
-              });
-            }
+          }
+          if (drawBox) {
+            currentPage.drawRectangle({
+              x: drawX * pageWidth,
+              y: drawY * pageHeight,
+              width: width * pageWidth,
+              height: -height * pageHeight,
+              borderWidth: el.mark.strokeWidth || 2,
+              borderColor: rgb(color[0] / 255, color[1] / 255, color[2] / 255),
+            });
           }
         })
       );
     }
+    document.body.append(bCanvas);
+
+    // draw custom ones
+    if (drawCustom) {
+      const bData = await new Promise((resolve) => {
+        bCanvas.toBlob((blb) => {
+          blb?.arrayBuffer().then(resolve);
+        });
+      });
+
+      const bImage = await pdfDoc.embedPng(bData as ArrayBuffer);
+
+      currentPage.drawImage(bImage, {
+        x: 0,
+        y: 0,
+        width: pageWidth,
+        height: pageHeight,
+      });
+    }
 
     // Draw a string of text diagonally across the first page
 
-    const pdfBytes = await pdfDoc.save();
+    if (immediateDownload) {
+      const pdfBytes = await pdfDoc.save();
 
-    const blob = new Blob([pdfBytes], {
-      type: "application/pdf",
-    });
+      const blob = new Blob([pdfBytes], {
+        type: "application/pdf",
+      });
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.style.display = "none";
-    a.click();
-    a.remove();
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.style.display = "none";
+      a.click();
+      a.remove();
 
-    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    }
+    return pdfDoc;
   };
 
   private syncAnnotationData = () => {

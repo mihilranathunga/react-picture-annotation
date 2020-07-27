@@ -2,7 +2,6 @@ import { storiesOf } from "@storybook/react";
 import React, { useEffect, useState } from "react";
 import { action } from "@storybook/addon-actions";
 import styled from "styled-components";
-
 import { ReactPictureAnnotation } from "../src";
 import { IAnnotation } from "../src/Annotation";
 import { IShapeData } from "../src/Shape";
@@ -15,8 +14,8 @@ const defaultAnnotations = [
       type: "RECT",
       width: 161,
       height: 165,
-      x: 229,
-      y: 92,
+      x: 0.1,
+      y: 0.1,
     },
   },
   {
@@ -37,8 +36,8 @@ const defaultAnnotations = [
       type: "RECT",
       width: 0.2,
       height: 0.2,
-      x: 0.4,
-      y: 0.4,
+      x: 0.5,
+      y: 0.5,
     },
   },
   {
@@ -48,8 +47,31 @@ const defaultAnnotations = [
       type: "RECT",
       width: 0.5,
       height: 0.1,
-      x: 0.1,
-      y: 0.5,
+      x: 0.9,
+      y: 0.9,
+    },
+  },
+
+  {
+    id: "test2--a",
+    comment: "percentages 2 ",
+    mark: {
+      type: "RECT",
+      width: 0.5,
+      height: 0.1,
+      x: 0.25,
+      y: 0.75,
+    },
+  },
+  {
+    id: "test2--b",
+    comment: "percentages 2 ",
+    mark: {
+      type: "RECT",
+      width: 0.5,
+      height: 0.1,
+      x: 0.75,
+      y: 0.25,
     },
   },
 ];
@@ -726,22 +748,47 @@ storiesOf("Annotator", module)
     const [annotationData, setAnnotationData] = useState<
       IAnnotation<IShapeData>[]
     >(
-      defaultAnnotations.map((el) => ({
-        ...el,
-        mark: {
-          ...el.mark,
-          draw: (canvas, x, y, _, _2, scale) => {
-            const fontSize = 16 * (scale || 1);
-            canvas.font = `${fontSize}px verdana`;
+      defaultAnnotations
+        .map(
+          (el, i) =>
+            ({
+              ...el,
+              mark: {
+                ...el.mark,
+                draw: (ctx, x, y, _, _2, scale) => {
+                  const fontsize = scale * 28;
+                  const fontface = "verdana";
+                  const text = `Hello! - ${i}`;
 
-            canvas.fillStyle = "#000000";
-            canvas.fillText("Scaled text", x, y);
-          },
-        },
-      }))
+                  ctx.font = fontsize + "px " + fontface;
+                  const textWidth = ctx.measureText(text).width + 8;
+
+                  ctx.textAlign = "left";
+                  ctx.textBaseline = "top";
+                  ctx.fillStyle = "red";
+                  ctx.fillRect(x, y, textWidth, fontsize + 4);
+                  ctx.fillStyle = "white";
+                  ctx.fillText(text, x + 4, y + 2);
+                },
+              },
+            } as IAnnotation<IShapeData>)
+        )
+        .concat([
+          {
+            id: "additional",
+            comment: "Hello World2",
+            mark: {
+              type: "RECT",
+              width: 0.2,
+              height: 0.3,
+              x: 0.1,
+              y: 0.25,
+            },
+          } as IAnnotation<IShapeData>,
+        ])
     );
 
-    const [selectedId, setSelectedId] = useState<string | null>("a");
+    const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const onResize = () => {
       setSize({
@@ -771,7 +818,7 @@ storiesOf("Annotator", module)
             setSelectedId(e);
             action("onSelect")(e);
           }}
-          pdf="http://localhost:5000/OAO-ASDAA-05-00001-0001 copy.pdf"
+          pdf="https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf"
           ref={annotationRef}
         />
         <div style={{ position: "absolute", zIndex: 1000 }}>
