@@ -25,7 +25,9 @@ jobs:
           FOLDER: storybook-static # The folder the action should deploy.
 
       - name: Build package 🔧 # Builds package
-        run: yarn build
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          yarn build
 
       - name: Release 🚀
         env:

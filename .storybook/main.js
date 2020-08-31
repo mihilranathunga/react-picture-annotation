@@ -1,9 +1,10 @@
 const path = require('path');
 
 module.exports = {
-  stories: ['../stories/*.stories.tsx'],
-  typescript: { reactDocgen: false },
+  stories: ['../stories/*.stories.tsx', '../stories/*.stories.mdx'],
+  typescript: { reactDocgen: 'react-docgen' },
   addons: [
+    '@storybook/addon-docs',
     '@storybook/addon-links',
     '@storybook/addon-essentials',
     {

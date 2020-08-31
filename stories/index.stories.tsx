@@ -76,7 +76,7 @@ const defaultAnnotations = [
   },
 ];
 
-storiesOf("Annotator", module)
+storiesOf("Default Viewer", module)
   .add("No Edit", () => {
     const [size, setSize] = useState({
       width: window.innerWidth - 16,
