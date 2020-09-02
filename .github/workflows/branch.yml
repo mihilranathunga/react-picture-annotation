@@ -43,7 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: 'Preview of cogs available at https://cognitedata.github.io/cogs.js/${{ env.GITHUB_HEAD_REF_SLUG }}!'
+          msg: 'Preview of cogs available at https://cognitedata.github.io/react-picture-annotation/${{ env.GITHUB_HEAD_REF_SLUG }}!'
           check_for_duplicate_msg: false # OPTIONAL
 
       - name: Build
