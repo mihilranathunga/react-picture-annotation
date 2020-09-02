@@ -1,6 +1,6 @@
 import React from 'react';
 import { FileViewer, ViewerProps } from './FileViewer';
-import { ContextProps, FileViewerProvider } from './FileViewerContext';
+import Context, { ContextProps, FileViewerProvider } from './FileViewerContext';
 
 const CombinedCogniteFileViewer = ({
   sdk,
@@ -17,6 +17,7 @@ const CombinedCogniteFileViewer = ({
 const CogniteFileViewer = Object.assign(CombinedCogniteFileViewer, {
   FileViewer,
   Provider: FileViewerProvider,
+  Context,
 });
 
 export { CogniteFileViewer, CombinedCogniteFileViewer };

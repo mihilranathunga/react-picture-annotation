@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import { CogniteClient } from '@cognite/sdk';
-import { response } from './resources';
-import { FileViewerContextObserver } from '../src';
+import { response, orcResults } from './resources';
+import { FileViewerContextObserverPublicProps } from '../src';
 
 export const pdfFile = {
   id: 1,
@@ -29,6 +29,7 @@ export const imgSdk = ({
     create: async (...annotations: any[]) =>
       annotations.map((el) => ({ ...el, id: randomId() })),
   },
+  post: async () => ({ data: { items: { annotations: orcResults } } }),
   files: {
     retrieve: async () => [imgFile],
     getDownloadUrls: async () => [{ downloadUrl: '//unsplash.it/800/400' }],
@@ -43,6 +44,7 @@ export const pdfSdk = ({
     create: async (...annotations: any[]) =>
       annotations.map((el) => ({ ...el, id: randomId() })),
   },
+  post: async () => ({ data: { items: { annotations: orcResults } } }),
   files: {
     retrieve: async () => [pdfFile],
     getDownloadUrls: async () => [
@@ -60,6 +62,7 @@ export const Container = styled.div`
   background: grey;
 `;
 
-export const stubObserverObj = (_: FileViewerContextObserver) => null;
+export const stubObserverObj = (_: FileViewerContextObserverPublicProps) =>
+  null;
 
 const randomId = () => Math.random().toString(36).substr(2, 9);

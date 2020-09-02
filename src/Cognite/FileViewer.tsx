@@ -5,7 +5,7 @@ import {
   IAnnotation,
   IRectShapeData,
 } from '..';
-import { Button, Colors, Pagination } from '@cognite/cogs.js';
+import { Button, Colors, Pagination, Dropdown, Menu } from '@cognite/cogs.js';
 import styled from 'styled-components';
 import {
   CogniteAnnotation,
@@ -16,12 +16,15 @@ import {
 } from '@cognite/annotations';
 import { FileInfo } from '@cognite/sdk';
 import CogniteFileViewerContext from './FileViewerContext';
+import { SearchField } from './SearchField';
 import {
   ProposedCogniteAnnotation,
   convertCogniteAnnotationToIAnnotation,
   isSameResource,
   retrieveDownloadUrl,
   isPreviewableImage,
+  retrieveOCRResults,
+  TextBox,
 } from './FileViewerUtils';
 
 export type ViewerEditCallbacks = {
@@ -37,17 +40,17 @@ export type ViewerProps = {
   /**
    * File will tell the viewer what file to show.
    */
-  file?: FileInfo; 
+  file?: FileInfo;
   /**
    * Should the label of the of the annotation be hidden
    */
   editable?: boolean;
   /**
-   * should you be able to create new annotations?
+   * Should users be able to create new annotations
    */
   creatable?: boolean;
   /**
-   * Should you be able to choose annotations purely using hovers? Useful in conjunction with `renderItemPreview`
+   * Should users be able to choose annotations purely using hovers? Useful in conjunction with `renderItemPreview`
    */
   hoverable?: boolean;
   /**
@@ -72,7 +75,9 @@ export type ViewerProps = {
   /**
    * Callback for when something is selected
    */
-  onAnnotationSelected?: (annotation: CogniteAnnotation | ProposedCogniteAnnotation|undefined )=>void;
+  onAnnotationSelected?: (
+    annotation: CogniteAnnotation | ProposedCogniteAnnotation | undefined
+  ) => void;
   /**
    * Should pagination be shown, and what size? One page files will have no pagination displayed regardless of settings!
    */
@@ -82,9 +87,17 @@ export type ViewerProps = {
    */
   hideLabel?: boolean;
   /**
-   * Should you be able to edit existing annotations and add new ones
+   * Should users be able to edit existing annotations and add new ones
    */
   hideControls?: boolean;
+  /**
+   * Should hide the download button
+   */
+  hideDownload?: boolean;
+  /**
+   * Should hide the search field
+   */
+  hideSearch?: boolean;
   /**
    * What to display while loading. Note this is NOT displayed when `file` is not set.
    */
@@ -105,11 +118,12 @@ export const FileViewer = ({
   pagination = 'normal',
   hideControls = false,
   loader,
+  hideDownload = false,
+  hideSearch = false,
   onAnnotationSelected,
   renderAnnotation = convertCogniteAnnotationToIAnnotation,
   annotations: annotationsFromProps,
 }: ViewerProps) => {
-
   const {
     annotations,
     setAnnotations,
@@ -128,6 +142,10 @@ export const FileViewer = ({
     zoomIn,
     zoomOut,
     reset,
+    totalPages,
+    setTotalPages,
+    download,
+    query,
   } = useContext(CogniteFileViewerContext);
 
   useEffect(() => {
@@ -159,7 +177,10 @@ export const FileViewer = ({
     [annotations, selectedAnnotation]
   );
 
-  const [realAnnotations, setRealAnnotations] = useState<
+  /**
+   * caching for performance
+   */
+  const [visibleAnnotations, setVisibleAnnotations] = useState<
     IAnnotation<IRectShapeData>[]
   >(combinedIAnnotations || ([] as IAnnotation<IRectShapeData>[]));
 
@@ -168,11 +189,48 @@ export const FileViewer = ({
 
   const [height, setHeight] = useState(0);
   const [width, setWidth] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [textboxes, setTextboxes] = useState<TextBox[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(undefined);
 
   const fileId = file ? file.id : undefined;
+
+  const textboxesToShow = useMemo(
+    () =>
+      textboxes
+        .filter(
+          (box) =>
+            query.length !== 0 &&
+            query
+              .toLowerCase()
+              .split(',')
+              .some((el) => box.text.toLowerCase().includes(el))
+        )
+        .map(
+          (el) =>
+            ({
+              id: JSON.stringify(el.boundingBox),
+              mark: {
+                x: el.boundingBox.xMin,
+                y: el.boundingBox.yMin,
+                width: el.boundingBox.xMax - el.boundingBox.xMin,
+                height: el.boundingBox.yMax - el.boundingBox.yMin,
+                backgroundColor: `${Colors['midblue-4'].hex()}88`,
+                strokeWidth: 0,
+              },
+              disableClick: true,
+            } as IAnnotation<IRectShapeData>)
+        ),
+    [textboxes, query]
+  );
+
+  useEffect(() => {
+    (async () => {
+      if (fileId) {
+        setTextboxes(await retrieveOCRResults(sdk, fileId));
+      }
+    })();
+  }, [fileId, setTextboxes]);
 
   useEffect(() => {
     (async () => {
@@ -195,7 +253,7 @@ export const FileViewer = ({
   }, [annotatorRef]);
 
   useEffect(() => {
-    setRealAnnotations(combinedIAnnotations);
+    setVisibleAnnotations(combinedIAnnotations);
   }, [combinedIAnnotations]);
 
   useEffect(() => {
@@ -249,7 +307,7 @@ export const FileViewer = ({
     );
     if (foundAnno) {
       const pendingAnnotation = editCallbacks.onUpdate({
-        ...foundAnno!,
+        ...foundAnno,
         box: {
           xMin: annotation.mark.x,
           yMin: annotation.mark.y,
@@ -262,7 +320,7 @@ export const FileViewer = ({
           await updateAnnotation(sdk, [
             {
               id: pendingAnnotation.id,
-              annotation: (pendingAnnotation as CogniteAnnotation),
+              annotation: pendingAnnotation as CogniteAnnotation,
               update: {
                 box: {
                   set: pendingAnnotation.box,
@@ -312,6 +370,14 @@ export const FileViewer = ({
     }
   };
 
+  const annotationData = useMemo(
+    () =>
+      visibleAnnotations
+        .filter((el) => totalPages === 1 || el.page === page)
+        .concat(textboxesToShow),
+    [textboxesToShow, page, totalPages, visibleAnnotations]
+  );
+
   return (
     <div
       ref={wrapperRef}
@@ -331,14 +397,17 @@ export const FileViewer = ({
         drawLabel={!hideLabel}
         hoverable={hoverable}
         editable={editable}
-        annotationData={realAnnotations.filter(
-          (el) => totalPages === 1 || el.page === page
-        )}
+        annotationData={annotationData}
         onChange={(e) => {
-          setRealAnnotations(
-            realAnnotations
+          // if (textboxesToShow.find(el=>el.id===))
+          setVisibleAnnotations(
+            visibleAnnotations
               .filter((el) => !(totalPages === 1 || el.page === page))
-              .concat(e as IAnnotation<IRectShapeData>[])
+              .concat(
+                e.filter(
+                  (el) => !textboxesToShow.some((box) => box.id === el.id)
+                ) as IAnnotation<IRectShapeData>[]
+              )
           );
         }}
         onSelect={onAnnotationSelect}
@@ -354,7 +423,7 @@ export const FileViewer = ({
         page={page}
         onLoading={(isLoading) => setLoading(isLoading)}
         renderItemPreview={renderItemPreview}
-        onPDFLoaded={({ pages }) => {
+        onPDFLoaded={async ({ pages }) => {
           setLoading(false);
           setTotalPages(pages);
         }}
@@ -399,6 +468,43 @@ export const FileViewer = ({
           </div>
         </Buttons>
       )}
+      <ToolingButtons>
+        {!hideSearch && textboxes.length !== 0 && <SearchField />}
+        {download && !hideDownload && (
+          <Dropdown
+            content={
+              <Menu>
+                <Menu.Item
+                  onClick={() =>
+                    download!(
+                      file ? file.name : 'export.pdf',
+                      false,
+                      false,
+                      false
+                    )
+                  }
+                >
+                  Original File
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() =>
+                    download!(
+                      file ? file.name : 'export.pdf',
+                      false,
+                      true,
+                      true
+                    )
+                  }
+                >
+                  File with Annotations
+                </Menu.Item>
+              </Menu>
+            }
+          >
+            <Button icon="Download" />
+          </Dropdown>
+        )}
+      </ToolingButtons>
     </div>
   );
 };
@@ -435,5 +541,17 @@ const Buttons = styled.div`
   && #controls > *:nth-last-child(1) {
     border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
+  }
+`;
+const ToolingButtons = styled.div`
+  display: inline-flex;
+  position: absolute;
+  z-index: 2;
+  right: 24px;
+  top: 24px;
+  align-items: stretch;
+
+  && > * {
+    margin-left: 8px;
   }
 `;

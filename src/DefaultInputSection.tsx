@@ -1,6 +1,6 @@
-import React from "react";
-import { IAnnotation } from "./Annotation";
-import DeleteButton from "./DeleteButton";
+import React from 'react';
+import { IAnnotation } from './Annotation';
+import DeleteButton from './DeleteButton';
 
 export interface IDefaultInputSection {
   annotation: IAnnotation;
@@ -8,23 +8,16 @@ export interface IDefaultInputSection {
   onDelete: () => void;
 }
 
-export default ({
-  annotation,
-  onChange,
-  onDelete
-}: IDefaultInputSection) => {
+export default ({ annotation, onChange, onDelete }: IDefaultInputSection) => {
   return (
     <div className="rp-default-input-section">
       <input
         className="rp-default-input-section_input"
         placeholder="INPUT TAG HERE"
         value={annotation.comment}
-        onChange={e => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
       />
-      <a
-        className="rp-default-input-section_delete"
-        onClick={() => onDelete()}
-      >
+      <a className="rp-default-input-section_delete" onClick={() => onDelete()}>
         <DeleteButton />
       </a>
     </div>

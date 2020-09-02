@@ -14,7 +14,7 @@ import {
 } from '../src/Cognite/FileViewerContext';
 import {
   useDownloadPDF,
-  useAnnotationControls,
+  useZoomControls,
 } from '../src/Cognite/FileViewerContext';
 
 export const AllowCustomization = () => {
@@ -106,7 +106,7 @@ export const SplitContextAndViewer = () => {
   const AnotherComponent = () => {
     // This component now has access to all of the utilities and props of the viewer!
     const download = useDownloadPDF();
-    const { zoomIn, zoomOut, reset } = useAnnotationControls();
+    const { zoomIn, zoomOut, reset } = useZoomControls();
     const extract = useExtractFromCanvas();
     const {
       selectedAnnotation,

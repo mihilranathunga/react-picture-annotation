@@ -62,46 +62,6 @@ export const selectAnnotationColor = <T extends PendingCogniteAnnotation>(
   return Colors['text-color-secondary'].hex();
 };
 
-export const getPnIdAnnotationCategories = <T extends PendingCogniteAnnotation>(
-  annotations: T[]
-) =>
-  annotations.reduce(
-    (prev, el) => {
-      const type = getPnIDAnnotationType(el);
-      if (el.resourceType === 'asset') {
-        if (!prev.Asset.items[type]) {
-          prev.Asset.items[type] = [];
-        }
-        prev.Asset.items[type].push(el);
-        prev.Asset.count += 1;
-      } else if (el.resourceType === 'file') {
-        if (!prev.File.items[type]) {
-          prev.File.items[type] = [];
-        }
-        prev.File.items[type].push(el);
-        prev.File.count += 1;
-      } else {
-        if (!prev.Unclassified.items[type]) {
-          prev.Unclassified.items[type] = [];
-        }
-        prev.Unclassified.items[type].push(el);
-        prev.Unclassified.count += 1;
-      }
-      return prev;
-    },
-    {
-      Asset: { items: {}, count: 0 },
-      File: { items: {}, count: 0 },
-      Unclassified: { items: {}, count: 0 },
-    } as {
-      [key: string]: {
-        items: { [key: string]: T[] };
-        count: number;
-      };
-    }
-  );
-
-
 export const convertCogniteAnnotationToIAnnotation = (
   el: CogniteAnnotation | ProposedCogniteAnnotation,
   isSelected = false
@@ -136,7 +96,6 @@ export const isSameResource = (
   );
 };
 
-
 export const isPreviewableImage = (file: FileInfo) => {
   const { mimeType = '' } = file;
   return ['png', 'jpeg', 'jpg', 'svg'].some((el) => mimeType.includes(el));
@@ -155,3 +114,25 @@ export const retrieveDownloadUrl = async (
     return undefined;
   }
 };
+export const retrieveOCRResults = async (
+  client: CogniteClient,
+  fileId: number
+) => {
+  try {
+    const {
+      data: {
+        items: { annotations },
+      },
+    } = await client.post<{ items: { annotations: TextBox[] } }>(
+      `/api/playground/projects/${client.project}/context/pnid/ocr`,
+      { data: { fileId } }
+    );
+    return annotations;
+  } catch (e) {
+    return [];
+  }
+};
+export interface TextBox {
+  text: string;
+  boundingBox: { xMin: number; xMax: number; yMin: number; yMax: number };
+}

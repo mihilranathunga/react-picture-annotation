@@ -11,6 +11,7 @@
     "build-storybook": "build-storybook",
     "commit": "npx git-cz",
     "precommit": "yarn lint --fix",
+    "eslint": "eslint --fix",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "lib:publish": "npm run build && npm publish",
     "semantic-release": "semantic-release"
