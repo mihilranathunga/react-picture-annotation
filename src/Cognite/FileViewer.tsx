@@ -7,7 +7,13 @@ import {
 } from '..';
 import { Button, Colors, Pagination } from '@cognite/cogs.js';
 import styled from 'styled-components';
-import { CogniteAnnotation, CURRENT_VERSION } from '@cognite/annotations';
+import {
+  CogniteAnnotation,
+  CURRENT_VERSION,
+  createAnnotations,
+  updateAnnotation,
+  PendingCogniteAnnotation,
+} from '@cognite/annotations';
 import { FileInfo } from '@cognite/sdk';
 import CogniteFileViewerContext from './FileViewerContext';
 import {
@@ -22,47 +28,87 @@ export type ViewerEditCallbacks = {
   onUpdate: <T extends ProposedCogniteAnnotation | CogniteAnnotation>(
     annotation: T
   ) => T | false;
-  onCreate: <T extends ProposedCogniteAnnotation | CogniteAnnotation>(
+  onCreate: <T extends PendingCogniteAnnotation | CogniteAnnotation>(
     annotation: T
   ) => T | false;
 };
 
 export type ViewerProps = {
-  file?: FileInfo;
-  drawLabel?: boolean;
+  /**
+   * File will tell the viewer what file to show.
+   */
+  file?: FileInfo; 
+  /**
+   * Should the label of the of the annotation be hidden
+   */
   editable?: boolean;
+  /**
+   * should you be able to create new annotations?
+   */
   creatable?: boolean;
+  /**
+   * Should you be able to choose annotations purely using hovers? Useful in conjunction with `renderItemPreview`
+   */
   hoverable?: boolean;
+  /**
+   * Used when `disableAutoFetch` is true to supply `annotations` to display
+   */
   annotations?: CogniteAnnotation[];
+  /**
+   * Callbacks when something is created or edited. Return false from function if you want to handle it in a custom manner.
+   */
   editCallbacks?: ViewerEditCallbacks;
+  /**
+   * Useful when in hover mode. Renders a small display of whatever you link near the box when something is selected.
+   */
   renderAnnotation?: (
     el: CogniteAnnotation | ProposedCogniteAnnotation,
     isSelected: boolean
   ) => IAnnotation<IRectShapeData>;
+  /**
+   * Override how an annotation box is drawn on top of the file
+   */
   renderItemPreview?: RenderItemPreviewFunction;
+  /**
+   * Callback for when something is selected
+   */
+  onAnnotationSelected?: (annotation: CogniteAnnotation | ProposedCogniteAnnotation|undefined )=>void;
+  /**
+   * Should pagination be shown, and what size? One page files will have no pagination displayed regardless of settings!
+   */
   pagination?: false | 'small' | 'normal';
+  /**
+   * Should controls (zoom levels) be hidden.
+   */
+  hideLabel?: boolean;
+  /**
+   * Should you be able to edit existing annotations and add new ones
+   */
   hideControls?: boolean;
+  /**
+   * What to display while loading. Note this is NOT displayed when `file` is not set.
+   */
   loader?: React.ReactNode;
 };
 
-export const FileViewer = (props: ViewerProps) => {
-  const {
-    file: fileFromProps,
-    drawLabel = false,
-    hoverable = false,
-    editCallbacks = {
-      onUpdate: (a) => a,
-      onCreate: (a) => a,
-    } as ViewerEditCallbacks,
-    renderItemPreview = () => <></>,
-    creatable,
-    editable,
-    pagination = 'normal',
-    hideControls = false,
-    loader,
-    renderAnnotation = convertCogniteAnnotationToIAnnotation,
-    annotations: annotationsFromProps,
-  } = props || {};
+export const FileViewer = ({
+  file: fileFromProps,
+  hideLabel = true,
+  hoverable = false,
+  editCallbacks = {
+    onUpdate: (a) => a,
+    onCreate: (a) => a,
+  } as ViewerEditCallbacks,
+  renderItemPreview = () => <></>,
+  creatable,
+  editable,
+  pagination = 'normal',
+  hideControls = false,
+  loader,
+  onAnnotationSelected,
+  renderAnnotation = convertCogniteAnnotationToIAnnotation,
+  annotations: annotationsFromProps,
+}: ViewerProps) => {
 
   const {
     annotations,
@@ -85,12 +131,16 @@ export const FileViewer = (props: ViewerProps) => {
   } = useContext(CogniteFileViewerContext);
 
   useEffect(() => {
-    if (
-      annotationsFromProps
-    ) {
+    if (annotationsFromProps) {
       setAnnotations(annotationsFromProps);
     }
   }, [annotationsFromProps, setAnnotations]);
+
+  useEffect(() => {
+    if (onAnnotationSelected) {
+      onAnnotationSelected(selectedAnnotation);
+    }
+  }, [selectedAnnotation, onAnnotationSelected]);
 
   useEffect(() => {
     if (fileFromProps) {
@@ -109,9 +159,9 @@ export const FileViewer = (props: ViewerProps) => {
     [annotations, selectedAnnotation]
   );
 
-  const [realAnnotations, setRealAnnotations] = useState<IAnnotation<IRectShapeData>[]>(
-    combinedIAnnotations || ([] as IAnnotation<IRectShapeData>[])
-  );
+  const [realAnnotations, setRealAnnotations] = useState<
+    IAnnotation<IRectShapeData>[]
+  >(combinedIAnnotations || ([] as IAnnotation<IRectShapeData>[]));
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const annotatorRef = useRef<ReactPictureAnnotation>(null);
@@ -194,10 +244,11 @@ export const FileViewer = (props: ViewerProps) => {
   const onUpdateAnnotation = async (
     annotation: IAnnotation<IRectShapeData>
   ) => {
-      const foundAnno = annotations.find(
-        (el) => el.id === Number(annotation.id) || el.id === annotation.id
-      );
-      const editedAnnotation = editCallbacks.onUpdate({
+    const foundAnno = annotations.find(
+      (el) => el.id === Number(annotation.id) || el.id === annotation.id
+    );
+    if (foundAnno) {
+      const pendingAnnotation = editCallbacks.onUpdate({
         ...foundAnno!,
         box: {
           xMin: annotation.mark.x,
@@ -206,30 +257,45 @@ export const FileViewer = (props: ViewerProps) => {
           yMax: annotation.mark.y + annotation.mark.height,
         },
       });
-      if (editedAnnotation){
-      setAnnotations(
-        annotations.reduce((prev, el) => {
-          if (el.id !== Number(annotation.id) && el.id !== annotation.id) {
-            prev.push(el);
-          } else {
-            prev.push(editedAnnotation);
-          }
-          return prev;
-        }, [] as (CogniteAnnotation|ProposedCogniteAnnotation)[])
-      );
+      if (pendingAnnotation) {
+        if (typeof pendingAnnotation.id === 'number') {
+          await updateAnnotation(sdk, [
+            {
+              id: pendingAnnotation.id,
+              annotation: (pendingAnnotation as CogniteAnnotation),
+              update: {
+                box: {
+                  set: pendingAnnotation.box,
+                },
+              },
+            },
+          ]);
+        }
+        setAnnotations(
+          annotations.reduce((prev, el) => {
+            if (el.id !== Number(annotation.id) && el.id !== annotation.id) {
+              prev.push(el);
+            } else {
+              prev.push(pendingAnnotation);
+            }
+            return prev;
+          }, [] as (CogniteAnnotation | ProposedCogniteAnnotation)[])
+        );
       }
+    }
   };
 
-  const onCreateAnnotation = async (annotation: IAnnotation<IRectShapeData>) => {
+  const onCreateAnnotation = async (
+    annotation: IAnnotation<IRectShapeData>
+  ) => {
     const pendingAnnotation = editCallbacks.onCreate({
-      id: annotation.id,
       status: 'verified',
       ...(file!.externalId
         ? { fileExternalId: file!.externalId }
         : { fileId: file!.id }),
       version: CURRENT_VERSION,
       label: '',
-      page: annotation.page ||page,
+      page: annotation.page || page,
       box: {
         xMin: annotation.mark.x,
         yMin: annotation.mark.y,
@@ -237,11 +303,12 @@ export const FileViewer = (props: ViewerProps) => {
         yMax: annotation.mark.y + annotation.mark.height,
       },
     } as ProposedCogniteAnnotation);
-    if (pendingAnnotation){
-      setAnnotations(
-        annotations.concat([pendingAnnotation])
-      );
-      setSelectedAnnotation(pendingAnnotation);
+    if (pendingAnnotation) {
+      const [createdAnnotation] = await createAnnotations(sdk, [
+        pendingAnnotation,
+      ]);
+      setAnnotations(annotations.concat([createdAnnotation]));
+      setSelectedAnnotation(createdAnnotation);
     }
   };
 
@@ -261,7 +328,7 @@ export const FileViewer = (props: ViewerProps) => {
       )}
       <ReactPictureAnnotation
         ref={annotatorRef}
-        drawLabel={drawLabel}
+        drawLabel={!hideLabel}
         hoverable={hoverable}
         editable={editable}
         annotationData={realAnnotations.filter(

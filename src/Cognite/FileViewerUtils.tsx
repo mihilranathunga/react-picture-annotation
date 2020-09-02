@@ -109,7 +109,7 @@ export const convertCogniteAnnotationToIAnnotation = (
   const isPending = typeof el.id === 'string';
   return {
     id: `${el.id}`,
-    comment: el.label || isPending ? 'Pending Annotation' : 'No Label',
+    comment: el.label || 'No Label',
     page: el.page,
     mark: {
       type: 'RECT',

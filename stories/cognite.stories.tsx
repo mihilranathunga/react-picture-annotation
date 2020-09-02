@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { action } from '@storybook/addon-actions';
+import { boolean, select } from '@storybook/addon-knobs';
 import { CogniteFileViewer, ViewerEditCallbacks } from '../src';
 import { imgSdk, imgFile, pdfFile, pdfSdk } from './utils';
 import {
@@ -149,5 +151,21 @@ export const SplitContextAndViewer = () => {
         <CogniteFileViewer.FileViewer file={pdfFile} editable={true} />
       </div>
     </CogniteFileViewer.Provider>
+  );
+};
+
+export const Playground = () => {
+  return (
+    <CogniteFileViewer
+      sdk={pdfSdk}
+      file={pdfFile}
+      editable={boolean('Editable', false)}
+      creatable={boolean('Creatable', false)}
+      hideControls={boolean('Hide Controls', false)}
+      hideLabel={boolean('Hide Label', false)}
+      hoverable={boolean('Hoverable', false)}
+      pagination={select('Pagination', ['small', 'normal', false], 'normal')}
+      onAnnotationSelected={action('onAnnotationSelected')}
+    />
   );
 };

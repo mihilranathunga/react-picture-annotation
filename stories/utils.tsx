@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import { CogniteClient } from '@cognite/sdk';
 import { response } from './resources';
+import { FileViewerContextObserver } from '../src';
 
 export const pdfFile = {
   id: 1,
@@ -9,7 +10,7 @@ export const pdfFile = {
   createdTime: new Date(),
   name: 'Random File',
   mimeType: 'application/pdf',
-}
+};
 
 export const imgFile = {
   id: 1,
@@ -18,11 +19,15 @@ export const imgFile = {
   createdTime: new Date(),
   name: 'Random File',
   mimeType: 'image/png',
-}
+};
 
 export const imgSdk = ({
   events: {
-    list: (..._: any[]) => ({autoPagingToArray: async() => response}),
+    list: (..._: any[]) => ({ autoPagingToArray: async () => response }),
+    update: async (...annotations: any[]) =>
+      annotations.map((el) => el.annotation),
+    create: async (...annotations: any[]) =>
+      annotations.map((el) => ({ ...el, id: randomId() })),
   },
   files: {
     retrieve: async () => [imgFile],
@@ -32,7 +37,11 @@ export const imgSdk = ({
 
 export const pdfSdk = ({
   events: {
-    list: (..._: any[]) => ({autoPagingToArray: async() => response}),
+    list: (..._: any[]) => ({ autoPagingToArray: async () => response }),
+    update: async (...annotations: any[]) =>
+      annotations.map((el) => el.annotation),
+    create: async (...annotations: any[]) =>
+      annotations.map((el) => ({ ...el, id: randomId() })),
   },
   files: {
     retrieve: async () => [pdfFile],
@@ -50,3 +59,7 @@ export const Container = styled.div`
   height: 600px;
   background: grey;
 `;
+
+export const stubObserverObj = (_: FileViewerContextObserver) => null;
+
+const randomId = () => Math.random().toString(36).substr(2, 9);

@@ -1,16 +1,12 @@
 import React from 'react';
-import {
-  FileViewer,
-  ViewerProps,
-} from './FileViewer';
-import {
-  ContextProps,
-  FileViewerProvider,
-} from './FileViewerContext';
+import { FileViewer, ViewerProps } from './FileViewer';
+import { ContextProps, FileViewerProvider } from './FileViewerContext';
 
-const CombinedCogniteFileViewer = (
-  { sdk, disableAutoFetch, ...extraProps }: ContextProps & ViewerProps
-) => {
+const CombinedCogniteFileViewer = ({
+  sdk,
+  disableAutoFetch,
+  ...extraProps
+}: ContextProps & ViewerProps) => {
   return (
     <FileViewerProvider sdk={sdk} disableAutoFetch={disableAutoFetch}>
       <FileViewer {...(extraProps as ViewerProps)} />

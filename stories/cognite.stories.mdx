@@ -1,10 +1,18 @@
 import { Meta, Story, Canvas, ArgsTable } from '@storybook/addon-docs/blocks';
-import { Container, imgSdk, imgFile, pdfFile, pdfSdk } from './utils';
+import {
+  Container,
+  imgSdk,
+  imgFile,
+  pdfFile,
+  pdfSdk,
+  stubObserverObj,
+} from './utils';
 import { CogniteFileViewer } from '../src';
 import {
   AllowCustomization,
   AllowControlledEditing,
   SplitContextAndViewer,
+  Playground,
 } from './cognite.stories.tsx';
 
 <Meta
@@ -70,4 +78,22 @@ Sometimes you want various views to also share access to the same annotations, p
 
 ## Props
 
-<ArgsTable of={CogniteFileViewer} />
+`CogniteFileViewer` supports and uses **ALL** props from `CogniteFileViewer.Provider` and `CogniteFileViewer.FileViewer` combined.
+
+### `CogniteFileViewer.Provider` Props
+
+<ArgsTable of={CogniteFileViewer.Provider} />
+
+### `CogniteFileViewer.FileViewer` Props
+
+<ArgsTable of={CogniteFileViewer.FileViewer} />
+
+### Available context props/hooks from `CogniteFileViewer.Context`
+
+<ArgsTable of={stubObserverObj} />
+
+## Playground
+
+<Canvas>
+  <Story story={Playground} />
+</Canvas>
