@@ -11,7 +11,7 @@ import {
   CogniteAnnotation,
   CURRENT_VERSION,
   createAnnotations,
-  updateAnnotation,
+  updateAnnotations,
   PendingCogniteAnnotation,
 } from '@cognite/annotations';
 import { FileInfo } from '@cognite/sdk';
@@ -317,7 +317,7 @@ export const FileViewer = ({
       });
       if (pendingAnnotation) {
         if (typeof pendingAnnotation.id === 'number') {
-          await updateAnnotation(sdk, [
+          await updateAnnotations(sdk, [
             {
               id: pendingAnnotation.id,
               annotation: pendingAnnotation as CogniteAnnotation,
