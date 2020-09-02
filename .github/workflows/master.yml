@@ -12,12 +12,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: rlespinasse/github-slug-action@master
-
-      - name: Print slug variables
-        run: |
-          echo ${{ env.GITHUB_HEAD_REF_SLUG }}
-
       - name: Cache node_modules
         id: cache-modules
         uses: actions/cache@v1

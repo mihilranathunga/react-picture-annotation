@@ -13,7 +13,7 @@ jobs:
 
       - name: Print slug variables
         run: |
-          echo ${{ env.GITHUB_HEAD_REF_SLUG }}
+          echo ${{ env.GITHUB_REF_SLUG }}
 
       - name: Cache node_modules
         id: cache-modules
@@ -36,14 +36,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages # The branch the action should deploy to.
           FOLDER: storybook-static
-          TARGET_FOLDER: ${{ env.GITHUB_HEAD_REF_SLUG }} # The folder the action should deploy
+          TARGET_FOLDER: ${{ env.GITHUB_REF_SLUG }} # The folder the action should deploy
 
       - name: Comment on PR
         uses: unsplash/comment-on-pr@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: 'Preview of cogs available at https://cognitedata.github.io/react-picture-annotation/${{ env.GITHUB_HEAD_REF_SLUG }}!'
+          msg: 'Preview of cogs available at https://cognitedata.github.io/react-picture-annotation/${{ env.GITHUB_REF_SLUG }}!'
           check_for_duplicate_msg: false # OPTIONAL
 
       - name: Build
