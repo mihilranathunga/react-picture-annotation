@@ -91,7 +91,7 @@ export class DefaultAnnotationState implements IAnnotationState {
       }
     }
     if (editable || creatable) {
-      const newShapeId = randomId();
+    const newShapeId = randomId();
       this.context.shapes.push(
         new RectShape(
           {
@@ -103,6 +103,7 @@ export class DefaultAnnotationState implements IAnnotationState {
               height: 0,
               type: "RECT",
             },
+            page: this.context.props.page||1
           },
           onShapeChange,
           this.context.getOriginalImageSize

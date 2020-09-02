@@ -1,28 +1,73 @@
-import { Meta, Story, Preview, Canvas } from '@storybook/addon-docs/blocks';
-import { Example, ExampleWithPDF } from './cognite.stories';
-
+import { Meta, Story, Canvas, ArgsTable } from '@storybook/addon-docs/blocks';
+import { Container, imgSdk, imgFile, pdfFile, pdfSdk } from './utils';
 import { CogniteFileViewer } from '../src';
+import {
+  AllowCustomization,
+  AllowControlledEditing,
+  SplitContextAndViewer,
+} from './cognite.stories.tsx';
 
-<Meta title="MDX/CogniteFileViewer" component={CogniteFileViewer} />
+<Meta
+  title="Advanced Cognite File Viewer"
+  component={CogniteFileViewer}
+  decorators={[(storyFn) => <Container>{storyFn()}</Container>]}
+/>
 
 # CogniteFileViewer
 
-Lets test
+Cognite File Viewer is easiest way to view files in CDF with annotations displayed on top.
+
+There are 2 ways to use this FileViewer, the simple way and the advanced way.
+
+## Simple Viewer
+
+The simple viewer will cover all the basic use case if you simply need to:
+
+- Preview a file with all the annotations on top
+- Zoom, pan, pinch, navigate across pages
+- Get a callback when an annotation is clicked
+- Download, search in a file
+- Customize annotations' appearance, viewer controls etc.
+
+If you need to modify the annotations from CDF and change them before supplying them to the viewer, or need to allow for add/edit annotation boxes, view the <a href="#advanced-viewer">Advanced Viewer Section</a>
+
+To use the viewer simply import the `CogniteFileViewer` and supply it a `sdk` and a `file`, as show below. You will have access to all the other props in the <a href="#props">Props Section</a>.
+
+**NOTE:** Avoid using `annotations` to supply additional annotations, this will be explained in the next section
 
 <Canvas>
-  <Story name="all checkboxes">
-    <Example />
+  <Story name="Simple">
+    <CogniteFileViewer sdk={imgSdk} file={imgFile} />
   </Story>
 </Canvas>
 
-Some stuff
+## Advanced Viewer
+
+This is much more useful for people who want to:
+
+- Modify annotations from CDF to add/edit/remove annotations and supply them to the viewer
+- Allow for creating/editing annotation via drag-and-create process
+
+In both cases, you would set `disableAutoFetch={true}` and supply `annotations` to the viewer. The sample code below will explain further
 
 <Canvas>
-  <Story name="PDF">
-    <ExampleWithPDF />
-  </Story>
+  <Story story={AllowCustomization} />
 </Canvas>
 
-# 2
+Here is a demo of the more advanced case with editing enabled.
 
-test 2
+<Canvas>
+  <Story story={AllowControlledEditing} />
+</Canvas>
+
+## Pro Viewer
+
+Sometimes you want various views to also share access to the same annotations, props as the viewer. Hence we have a `ContextProvider` and `FileViewer` seperated so you can add other components and allow them to change properties, access props and viewer callback with ease.
+
+<Canvas>
+  <Story story={SplitContextAndViewer} />
+</Canvas>
+
+## Props
+
+<ArgsTable of={CogniteFileViewer} />

@@ -4,7 +4,8 @@ import {
   CogniteAnnotation,
 } from '@cognite/annotations';
 import { Colors } from '@cognite/cogs.js';
-import { IAnnotation, IRectShapeData } from '../';
+import { IAnnotation, IRectShapeData } from '..';
+import { FileInfo, CogniteClient } from '@cognite/sdk';
 
 export interface ProposedCogniteAnnotation extends PendingCogniteAnnotation {
   id: string;
@@ -133,4 +134,24 @@ export const isSameResource = (
       (a.resourceId && a.resourceId === b.resourceId)
     )
   );
+};
+
+
+export const isPreviewableImage = (file: FileInfo) => {
+  const { mimeType = '' } = file;
+  return ['png', 'jpeg', 'jpg', 'svg'].some((el) => mimeType.includes(el));
+};
+
+export const retrieveDownloadUrl = async (
+  client: CogniteClient,
+  fileId: number
+) => {
+  try {
+    const [{ downloadUrl }] = await client.files.getDownloadUrls([
+      { id: fileId },
+    ]);
+    return downloadUrl;
+  } catch {
+    return undefined;
+  }
 };

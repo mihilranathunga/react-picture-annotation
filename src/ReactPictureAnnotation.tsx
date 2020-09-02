@@ -1,23 +1,37 @@
-import React, { MouseEventHandler, TouchEventHandler } from "react";
-import pdfjs from "pdfjs-dist";
-import { PDFDocument, rgb, PDFPage, degrees } from "pdf-lib";
-import parseColor from "parse-color";
-import { IAnnotation } from "./Annotation";
-import { IAnnotationState } from "./annotation/AnnotationState";
-import { DefaultAnnotationState } from "./annotation/DefaultAnnotationState";
-import DefaultInputSection from "./DefaultInputSection";
-import { IShape, IShapeBase, RectShape } from "./Shape";
-import Transformer, { ITransformer } from "./Transformer";
+import React, { MouseEventHandler, TouchEventHandler } from 'react';
+import pdfjs from 'pdfjs-dist';
+import { PDFDocument, rgb, PDFPage, degrees } from 'pdf-lib';
+import parseColor from 'parse-color';
+import { IAnnotation } from './Annotation';
+import { IAnnotationState } from './annotation/AnnotationState';
+import { DefaultAnnotationState } from './annotation/DefaultAnnotationState';
+import DefaultInputSection from './DefaultInputSection';
+import { IShape, IShapeBase, RectShape } from './Shape';
+import Transformer, { ITransformer } from './Transformer';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdf-hub-bundles.cogniteapp.com/dependencies/pdfjs-dist@2.4.456/build/pdf.worker.min.js`;
 
-export type RenderItemPreviewFunc = (
-  editable: boolean,
+export type RenderItemPreviewFunction = (
   annotation: IAnnotation,
-  onChange: (value: string) => void,
-  onDelete: () => void,
-  height: React.CSSProperties["maxHeight"]
+  height: React.CSSProperties['maxHeight']
 ) => React.ReactElement;
+
+export type DownloadFileFunction = (
+  fileName: string,
+  drawText?: boolean,
+  drawBox?: boolean,
+  drawCustom?: boolean,
+  immediateDownload?: boolean
+) => Promise<PDFDocument | undefined>;
+
+export type ViewerZoomFunction = () => void;
+
+export type ExtractFromCanvasFunction = (
+  x: number,
+  y: number,
+  width: number,
+  height: number
+) => string | undefined;
 
 interface IReactPictureAnnotationProps {
   annotationData?: IAnnotation[];
@@ -34,10 +48,9 @@ interface IReactPictureAnnotationProps {
   creatable?: boolean;
   hoverable?: boolean;
   drawLabel: boolean;
-  renderItemPreview: RenderItemPreviewFunc;
+  renderItemPreview?: RenderItemPreviewFunction;
   onAnnotationUpdate?: (annotation: IAnnotation) => void;
   onAnnotationCreate?: (annotation: IAnnotation) => void;
-  onAnnotationDelete?: (annotation: IAnnotation) => void;
   onPDFLoaded?: (props: { pages: number }) => void;
   onLoading: (loading: boolean) => void;
   onReady?: (element: ReactPictureAnnotation) => void;
@@ -79,19 +92,6 @@ export default class ReactPictureAnnotation extends React.Component<
     );
   }
   public static defaultProps = {
-    renderItemPreview: (
-      editable: boolean,
-      annotation: IAnnotation,
-      onChange: (value: string) => void,
-      onDelete: () => void
-    ) => (
-      <DefaultInputSection
-        editable={editable}
-        annotation={annotation}
-        onChange={onChange}
-        onDelete={onDelete}
-      />
-    ),
     editable: false,
     creatable: false,
     drawLabel: true,
@@ -140,11 +140,11 @@ export default class ReactPictureAnnotation extends React.Component<
     if (currentCanvas && currentImageCanvas) {
       this.setCanvasDPI();
 
-      this.canvas2D = currentCanvas.getContext("2d");
-      this.imageCanvas2D = currentImageCanvas.getContext("2d");
+      this.canvas2D = currentCanvas.getContext('2d');
+      this.imageCanvas2D = currentImageCanvas.getContext('2d');
       this.onImageChange();
 
-      currentCanvas.addEventListener("wheel", this.onWheel, { passive: false });
+      currentCanvas.addEventListener('wheel', this.onWheel, { passive: false });
     }
 
     this.syncAnnotationData();
@@ -194,7 +194,7 @@ export default class ReactPictureAnnotation extends React.Component<
 
   public componentWillUnmount = () => {
     if (this.canvasRef.current) {
-      this.canvasRef.current.removeEventListener("wheel", this.onWheel);
+      this.canvasRef.current.removeEventListener('wheel', this.onWheel);
     }
   };
 
@@ -261,7 +261,17 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   public render() {
-    const { width, height, renderItemPreview, editable } = this.props;
+    const {
+      width,
+      height,
+      renderItemPreview = (annotation) => (
+        <DefaultInputSection
+          annotation={annotation}
+          onChange={this.onInputCommentChange}
+          onDelete={this.onDelete}
+        />
+      ),
+    } = this.props;
     const { showInput, inputPosition } = this.state;
     return (
       <div className="rp-stage">
@@ -297,13 +307,7 @@ export default class ReactPictureAnnotation extends React.Component<
               }
             }}
           >
-            {renderItemPreview(
-              editable,
-              this.selectedItem,
-              this.onInputCommentChange,
-              this.onDelete,
-              inputPosition.maxHeight
-            )}
+            {renderItemPreview(this.selectedItem, inputPosition.maxHeight)}
           </div>
         )}
       </div>
@@ -387,7 +391,7 @@ export default class ReactPictureAnnotation extends React.Component<
                 }px)`,
               }),
               ...(!topOfMiddle && { maxHeight: `calc(${y - 2 * margin}px)` }),
-              overflow: "visible",
+              overflow: 'visible',
               zIndex: 1000,
             },
           });
@@ -397,7 +401,7 @@ export default class ReactPictureAnnotation extends React.Component<
       if (!hasSelectedItem) {
         this.setState({
           showInput: false,
-          inputComment: "",
+          inputComment: '',
         });
       }
     }
@@ -411,28 +415,7 @@ export default class ReactPictureAnnotation extends React.Component<
     }
   };
 
-  public onDelete = (id = this.selectedId) => {
-    const { onAnnotationDelete, editable } = this.props;
-    if (editable) {
-      const deleteTarget = this.shapes.findIndex(
-        (shape) => shape.getAnnotationData().id === id
-      );
-      if (deleteTarget >= 0) {
-        this.shapes.splice(deleteTarget, 1);
-        this.onShapeChange();
-        const annotation = this.shapes.find(
-          (shape) => shape.getAnnotationData().id === id
-        );
-        if (onAnnotationDelete && annotation) {
-          onAnnotationDelete(annotation.getAnnotationData());
-        }
-      }
-      this.selectedId = null;
-      this.onShapeChange();
-    }
-  };
-
-  public zoomIn = () => {
+  public zoomIn: ViewerZoomFunction = () => {
     if (this.scaleState.scale > 10) {
       this.scaleState.scale = 10;
     } else if (this.scaleState.scale < 0.1) {
@@ -453,7 +436,7 @@ export default class ReactPictureAnnotation extends React.Component<
     });
   };
 
-  public zoomOut = () => {
+  public zoomOut: ViewerZoomFunction = () => {
     if (this.scaleState.scale > 10) {
       this.scaleState.scale = 10;
     } else if (this.scaleState.scale < 0.1) {
@@ -474,11 +457,11 @@ export default class ReactPictureAnnotation extends React.Component<
     });
   };
 
-  public reset = async () => {
+  public reset: ViewerZoomFunction = async () => {
     this.props.onLoading(true);
     const nextImageNode =
-      this.currentImageElement || document.createElement("img");
-    nextImageNode.crossOrigin = "anonymous";
+      this.currentImageElement || document.createElement('img');
+    nextImageNode.crossOrigin = 'anonymous';
     const loadProperDimentions = () => {
       const { width, height } = nextImageNode;
       const imageNodeRatio = height / width;
@@ -507,14 +490,14 @@ export default class ReactPictureAnnotation extends React.Component<
     if (this.currentImageElement) {
       loadProperDimentions();
     } else {
-      nextImageNode.addEventListener("load", () => {
+      nextImageNode.addEventListener('load', () => {
         this.currentImageElement = nextImageNode;
         if (this.props.onReady) {
           this.props.onReady(this);
         }
         loadProperDimentions();
       });
-      nextImageNode.alt = "";
+      nextImageNode.alt = '';
       if (this.props.image) {
         nextImageNode.src = this.props.image;
       } else if (this._PDF_DOC) {
@@ -524,7 +507,19 @@ export default class ReactPictureAnnotation extends React.Component<
     this.props.onLoading(false);
   };
 
-  public downloadFile = async (
+  public onDelete = (id = this.selectedId) => {
+    const deleteTarget = this.shapes.findIndex(
+      (shape) => shape.getAnnotationData().id === id
+    );
+    if (deleteTarget >= 0) {
+      this.shapes.splice(deleteTarget, 1);
+      this.onShapeChange();
+    }
+    this.selectedId = null;
+    this.onShapeChange();
+  };
+
+  public downloadFile: DownloadFileFunction = async (
     fileName: string,
     drawText: boolean = true,
     drawBox: boolean = true,
@@ -550,8 +545,8 @@ export default class ReactPictureAnnotation extends React.Component<
 
     const DOWNLOAD_SCALE = 4;
 
-    const bCanvas = document.createElement("canvas");
-    const bCtx = bCanvas.getContext("2d")!;
+    const bCanvas = document.createElement('canvas');
+    const bCtx = bCanvas.getContext('2d')!;
 
     bCanvas.width = pageWidth * DOWNLOAD_SCALE;
     bCanvas.height = pageHeight * DOWNLOAD_SCALE;
@@ -559,7 +554,7 @@ export default class ReactPictureAnnotation extends React.Component<
     if (annotationData) {
       await Promise.all(
         annotationData.map(async (el) => {
-          const color = parseColor(el.mark.strokeColor || "blue").rgb;
+          const color = parseColor(el.mark.strokeColor || 'blue').rgb;
 
           let { x, y, width, height } = this.calculateShapePositionNoOffset(
             el.mark
@@ -672,16 +667,16 @@ export default class ReactPictureAnnotation extends React.Component<
       const pdfBytes = await pdfDoc.save();
 
       const blob = new Blob([pdfBytes], {
-        type: "application/pdf",
+        type: 'application/pdf',
       });
 
       const url = window.URL.createObjectURL(blob);
 
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
-      a.style.display = "none";
+      a.style.display = 'none';
       a.click();
       a.remove();
 
@@ -690,7 +685,7 @@ export default class ReactPictureAnnotation extends React.Component<
     return pdfDoc;
   };
 
-  public extractFromCanvas = (
+  public extractFromCanvas: ExtractFromCanvasFunction = (
     x: number,
     y: number,
     width: number,
@@ -703,10 +698,10 @@ export default class ReactPictureAnnotation extends React.Component<
         width,
         height,
       });
-      const bCanvas = document.createElement("canvas");
+      const bCanvas = document.createElement('canvas');
       bCanvas.height = resultSize.height;
       bCanvas.width = resultSize.width;
-      const bCtx = bCanvas.getContext("2d")!;
+      const bCtx = bCanvas.getContext('2d')!;
       bCtx.drawImage(
         this.currentImageElement,
         resultSize.x,
@@ -718,9 +713,9 @@ export default class ReactPictureAnnotation extends React.Component<
         resultSize.width,
         resultSize.height
       );
-      return bCanvas.toDataURL("image/png");
+      return bCanvas.toDataURL('image/png');
     }
-    return "";
+    return undefined;
   };
 
   private syncAnnotationData = () => {
@@ -782,8 +777,8 @@ export default class ReactPictureAnnotation extends React.Component<
     const currentCanvas = this.canvasRef.current;
     const currentImageCanvas = this.imageCanvasRef.current;
     if (currentCanvas && currentImageCanvas) {
-      const currentCanvas2D = currentCanvas.getContext("2d");
-      const currentImageCanvas2D = currentImageCanvas.getContext("2d");
+      const currentCanvas2D = currentCanvas.getContext('2d');
+      const currentImageCanvas2D = currentImageCanvas.getContext('2d');
       if (currentCanvas2D && currentImageCanvas2D) {
         currentCanvas2D.resetTransform();
         currentImageCanvas2D.resetTransform();
@@ -794,14 +789,11 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 
   private onInputCommentChange = (comment: string) => {
-    if (this.props.editable) {
-      const selectedShapeIndex = this.shapes.findIndex(
-        (item) => item.getAnnotationData().id === this.selectedId
-      );
-      this.shapes[selectedShapeIndex].getAnnotationData().comment = comment;
-      this.selectedId = null;
-      this.onShapeChange();
-    }
+    const selectedShapeIndex = this.shapes.findIndex(
+      (item) => item.getAnnotationData().id === this.selectedId
+    );
+    this.shapes[selectedShapeIndex].getAnnotationData().comment = comment;
+    this.onShapeChange();
   };
 
   private cleanImage = () => {
@@ -844,8 +836,8 @@ export default class ReactPictureAnnotation extends React.Component<
         8
       ),
     });
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d")!;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d')!;
 
     canvas.height = viewport.height;
     canvas.width = viewport.width;
@@ -860,11 +852,11 @@ export default class ReactPictureAnnotation extends React.Component<
       const { canvas, ctx, viewport } = this.createContext(page);
 
       await page.render({ canvasContext: ctx, viewport }).promise;
-      const data = canvas.toDataURL("image/png", 1);
+      const data = canvas.toDataURL('image/png', 1);
 
       return data;
     }
-    return "";
+    return '';
   };
 
   private onMouseDown: MouseEventHandler<HTMLCanvasElement> = (event) => {
@@ -1070,7 +1062,7 @@ export default class ReactPictureAnnotation extends React.Component<
   };
 }
 
-export const getPinchMidpoint = (touches: React.TouchList) => {
+const getPinchMidpoint = (touches: React.TouchList) => {
   const touch1 = touches[0];
   const touch2 = touches[1];
   return {
@@ -1079,7 +1071,7 @@ export const getPinchMidpoint = (touches: React.TouchList) => {
   };
 };
 
-export const getPinchLength = (touches: React.TouchList) => {
+const getPinchLength = (touches: React.TouchList) => {
   const touch1 = touches[0];
   const touch2 = touches[1];
   return Math.sqrt(
@@ -1088,7 +1080,7 @@ export const getPinchLength = (touches: React.TouchList) => {
   );
 };
 
-export const tryCancelEvent = (event: React.TouchEvent) => {
+const tryCancelEvent = (event: React.TouchEvent) => {
   if (event.cancelable === false) {
     return false;
   }

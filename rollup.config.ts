@@ -7,7 +7,6 @@ import babel from "rollup-plugin-babel";
 import json from "rollup-plugin-json";
 import external from "rollup-plugin-peer-deps-external";
 import postcss from "rollup-plugin-postcss";
-// import typescript from "rollup-plugin-typescript2";
 import url from "rollup-plugin-url";
 
 
@@ -38,10 +37,15 @@ export default {
     // Allow json resolution
     json(),
     // Allow bundling cjs modules (unlike webpack, rollup doesn't understand cjs)
-    commonjs(),
+    commonjs({
+      include: 'node_modules/**',
+      namedExports: {
+        'node_modules/react-is/index.js': ['isFragment', 'ForwardRef', 'typeOf', 'isValidElementType', 'isElement']
+      }
+    }),
     babel({ extensions, include: ["src/**/*"] }),
     // Resolve source maps to the original source
     sourceMaps(),
-    nodePolyfills()
+    nodePolyfills(),
   ]
 };

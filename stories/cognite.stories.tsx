@@ -1,106 +1,153 @@
-import React from 'react';
-import styled from 'styled-components';
-import { CogniteClient } from '@cognite/sdk';
-import { CogniteFileViewer } from '../src';
-import { response } from './resources';
-import { CogniteFileViewerProvider } from '../src/Cognite/CogniteFileViewerContext';
+import React, { useEffect, useState, useMemo } from 'react';
+import { CogniteFileViewer, ViewerEditCallbacks } from '../src';
+import { imgSdk, imgFile, pdfFile, pdfSdk } from './utils';
+import {
+  listAnnotationsForFile,
+  CogniteAnnotation,
+} from '@cognite/annotations';
+import { Button } from '@cognite/cogs.js';
+import {
+  useSelectedAnnotation,
+  useExtractFromCanvas,
+} from '../src/Cognite/FileViewerContext';
+import {
+  useDownloadPDF,
+  useAnnotationControls,
+} from '../src/Cognite/FileViewerContext';
 
-export default { title: 'Cognite File Viewer' };
+export const AllowCustomization = () => {
+  const [annotations, setAnnotations] = useState<CogniteAnnotation[]>([]);
+  useEffect(() => {
+    (async () => {
+      const annotationsFromCdf = await listAnnotationsForFile(pdfSdk, pdfFile);
+      setAnnotations(
+        annotationsFromCdf.concat([
+          {
+            id: 123,
+            label: 'David',
+            createdTime: new Date(),
+            lastUpdatedTime: new Date(),
+            type: 'tmp_annotation',
+            status: 'unhandled',
+            box: { xMin: 0.1, xMax: 0.2, yMin: 0.1, yMax: 0.2 },
+            version: 5,
+            page: 1,
+            source: 'tmp',
+          },
+        ])
+      );
+    })();
+  }, []);
+  return (
+    <CogniteFileViewer
+      sdk={pdfSdk}
+      file={pdfFile}
+      disableAutoFetch={true}
+      annotations={annotations}
+    />
+  );
+};
 
-const imageSdk = ({
-  events: {
-    list: (..._: any[]) => ({autoPagingToArray: async() => response}),
-  },
-  files: {
-    retrieve: async () => [{
-      id: 1,
-      lastUpdatedTime: new Date(),
-      uploaded: false,
-      createdTime: new Date(),
-      name: 'Random File',
-      mimeType: 'png',
-    }],
-    getDownloadUrls: async () => [{ downloadUrl: '//unsplash.it/800/400' }],
-  },
-} as unknown) as CogniteClient;
+export const AllowControlledEditing = () => {
+  const [annotations, setAnnotations] = useState<CogniteAnnotation[]>([]);
+  useEffect(() => {
+    (async () => {
+      setAnnotations(await listAnnotationsForFile(pdfSdk, pdfFile));
+    })();
+  }, []);
 
-const pdfSdk = ({
-  events: {
-    list: (..._: any[]) => ({autoPagingToArray: async() => response}),
-  },
-  files: {
-    retrieve: async () => [{
-      id: 1,
-      lastUpdatedTime: new Date(),
-      uploaded: false,
-      createdTime: new Date(),
-      name: 'Random File',
-      mimeType: 'application/pdf',
-    }],
-    getDownloadUrls: async () => [
-      {
-        downloadUrl:
-          'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf',
+  const callbacks: ViewerEditCallbacks = useMemo(
+    () => ({
+      onCreate: (annotation) => {
+        // decide if changes should complete
+        setAnnotations(annotations.concat([annotation as CogniteAnnotation]));
+        return false;
       },
-    ],
-  },
-} as unknown) as CogniteClient;
-
-export const Example = () => (
-  <Wrapper
-  sdk={imageSdk}>
+      onUpdate: (annotation) => {
+        // decide if changes should complete
+        setAnnotations(
+          annotations
+            .filter((el) => `${el.id}` !== `${annotation.id}`)
+            .concat([annotation as CogniteAnnotation])
+        );
+        return false;
+      },
+    }),
+    [annotations, setAnnotations]
+  );
+  return (
     <CogniteFileViewer
-      file={{
-        id: 1,
-        lastUpdatedTime: new Date(),
-        uploaded: false,
-        createdTime: new Date(),
-        name: 'Random File',
-        mimeType: 'png',
-      }}
+      sdk={imgSdk}
+      file={imgFile}
+      disableAutoFetch={true}
+      annotations={annotations}
+      editable={true}
+      editCallbacks={callbacks}
+      renderItemPreview={(anno) => (
+        <>
+          <span>{anno.comment}</span>
+          <Button
+            icon="Delete"
+            onClick={() =>
+              setAnnotations(
+                annotations.filter((el) => `${el.id}` !== `${anno.id}`)
+              )
+            }
+          />
+        </>
+      )}
     />
-  </Wrapper>
-);
+  );
+};
 
-export const ExampleWithPDF = () => (
-  <Wrapper
-  sdk={pdfSdk}>
-    <CogniteFileViewer
-      file={{
-        id: 1,
-        lastUpdatedTime: new Date(),
-        uploaded: false,
-        createdTime: new Date(),
-        name: 'Random File',
-        mimeType: 'application/pdf',
-      }}
-    />
-  </Wrapper>
-);
+export const SplitContextAndViewer = () => {
+  const AnotherComponent = () => {
+    // This component now has access to all of the utilities and props of the viewer!
+    const download = useDownloadPDF();
+    const { zoomIn, zoomOut, reset } = useAnnotationControls();
+    const extract = useExtractFromCanvas();
+    const {
+      selectedAnnotation,
+      setSelectedAnnotation,
+    } = useSelectedAnnotation();
 
-export const ExampleWithEditing = () => (
-  <Wrapper 
-    sdk={imageSdk}>
-    <CogniteFileViewer
-      file={{
-        id: 1,
-        lastUpdatedTime: new Date(),
-        uploaded: false,
-        createdTime: new Date(),
-        name: 'Random File',
-        mimeType: 'png',
-      }}
-      creatable={true}
-    />
-  </Wrapper>
-);
+    return (
+      <div style={{ width: 200, background: 'white' }}>
+        <Button onClick={() => download!('testing.pdf')}>Download</Button>
+        <Button onClick={() => zoomIn!()}>Zoom In</Button>
+        <Button onClick={() => zoomOut!()}>Zoom Out</Button>
+        <Button onClick={() => reset!()}>Reset</Button>
 
-
-
-const Wrapper = ({children, sdk}:{children:React.ReactNode, sdk: CogniteClient}) => <CogniteFileViewerProvider sdk={sdk}><Container>{children}</Container></CogniteFileViewerProvider>
-
-const Container = styled.div`
-  width: 100%;
-  height: 600px;
-  background: grey;
-`;
+        {selectedAnnotation && (
+          <Button onClick={() => setSelectedAnnotation(undefined)}>
+            Unselect Annotation
+          </Button>
+        )}
+        {selectedAnnotation &&
+          `${selectedAnnotation.type}: ${selectedAnnotation.description}`}
+        {selectedAnnotation && (
+          <img
+            style={{
+              objectFit: 'contain',
+              width: '100%',
+            }}
+            src={extract!(
+              selectedAnnotation.box.xMin,
+              selectedAnnotation.box.yMin,
+              selectedAnnotation.box.xMax - selectedAnnotation.box.xMin,
+              selectedAnnotation.box.yMax - selectedAnnotation.box.yMin
+            )}
+          />
+        )}
+      </div>
+    );
+  };
+  return (
+    <CogniteFileViewer.Provider sdk={pdfSdk}>
+      <div style={{ height: '100%', width: '100%', display: 'flex' }}>
+        <AnotherComponent />
+        <CogniteFileViewer.FileViewer file={pdfFile} editable={true} />
+      </div>
+    </CogniteFileViewer.Provider>
+  );
+};
