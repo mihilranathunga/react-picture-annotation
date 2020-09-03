@@ -896,6 +896,72 @@ storiesOf("Annotator", module)
         </div>
       </Wrapper>
     );
+  })
+  .add("Stress test", () => {
+    const AnnotationComponent = () => {
+      const [size, setSize] = useState({
+        width: window.innerWidth - 16,
+        height: window.innerHeight - 16,
+      });
+      const AMOUNT = 2000;
+      const [annotationData, setAnnotationData] = useState<
+        IAnnotation<IShapeData>[]
+      >(
+        [...Array(AMOUNT).keys()].map(
+          (x) =>
+            ({
+              id: `id-${x}`,
+              comment: `no-${x}`,
+              mark: {
+                type: "RECT",
+                x: x / AMOUNT,
+                y: x / AMOUNT,
+                width: 1 / AMOUNT,
+                height: 1 / AMOUNT,
+                draw: (canvas, x, y, w, h, scale) => {
+                  const fontSize = 16 * (scale || 0);
+                  canvas.font = `${fontSize}px verdana`;
+
+                  canvas.fillStyle = "white";
+                  canvas.fillText("Scaled text", x, y);
+                  canvas.fillStyle = "cyan";
+                  canvas.fillRect(x, y, w, h);
+                },
+              },
+            } as IAnnotation<IShapeData>)
+        )
+      );
+
+      const [selectedId, setSelectedId] = useState<string | null>("a");
+
+      const onResize = () => {
+        setSize({
+          width: window.innerWidth - 16,
+          height: window.innerHeight - 16,
+        });
+      };
+
+      useEffect(() => {
+        window.addEventListener("resize", onResize);
+        return () => {
+          window.removeEventListener("resize", onResize);
+        };
+      }, []);
+
+      return (
+        <ReactPictureAnnotation
+          width={size.width}
+          height={size.height}
+          annotationData={annotationData}
+          onChange={(data) => setAnnotationData(data)}
+          selectedId={selectedId}
+          onSelect={(e) => setSelectedId(e)}
+          pdf="https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf"
+        />
+      );
+    };
+
+    return <AnnotationComponent />;
   });
 
 const Wrapper = styled.div`
