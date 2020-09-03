@@ -50,6 +50,8 @@ export const AllowCustomization = () => {
   );
 };
 
+let id = 0;
+
 export const AllowControlledEditing = () => {
   const [annotations, setAnnotations] = useState<CogniteAnnotation[]>([]);
   useEffect(() => {
@@ -62,7 +64,17 @@ export const AllowControlledEditing = () => {
     () => ({
       onCreate: (annotation) => {
         // decide if changes should complete
-        setAnnotations(annotations.concat([annotation as CogniteAnnotation]));
+        id += 1;
+        setAnnotations(
+          annotations.concat([
+            {
+              ...annotation,
+              id,
+              createdTime: new Date(),
+              lastUpdatedTime: new Date(),
+            } as CogniteAnnotation,
+          ])
+        );
         return false;
       },
       onUpdate: (annotation) => {

@@ -24,7 +24,13 @@ export const SearchField = () => {
           onChange={(e) => setQuery(e.target.value)}
           value={query}
         />
-        <Button icon="Close" onClick={() => setOpen(false)} />
+        <Button
+          icon="Close"
+          onClick={() => {
+            setOpen(false);
+            setQuery('');
+          }}
+        />
       </Wrapper>
     );
   }

@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import { CogniteClient } from '@cognite/sdk';
 import { response, orcResults } from './resources';
 import { FileViewerContextObserverPublicProps } from '../src';
+import randomId from '../src/utils/randomId';
 
 export const pdfFile = {
   id: 1,
@@ -64,5 +65,3 @@ export const Container = styled.div`
 
 export const stubObserverObj = (_: FileViewerContextObserverPublicProps) =>
   null;
-
-const randomId = () => Math.random().toString(36).substr(2, 9);
