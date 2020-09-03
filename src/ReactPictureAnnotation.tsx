@@ -170,9 +170,15 @@ export default class ReactPictureAnnotation extends React.Component<
     }
     if (prevProps.pdf !== pdf) {
       if (pdf) {
-        this._PDF_DOC = await pdfjs.getDocument({ url: pdf }).promise;
-        if (this.props.onPDFLoaded) {
-          this.props.onPDFLoaded({ pages: this._PDF_DOC.numPages });
+        try {
+          this._PDF_DOC = await pdfjs.getDocument({ url: pdf }).promise;
+          if (this.props.onPDFLoaded) {
+            this.props.onPDFLoaded({ pages: this._PDF_DOC.numPages });
+          }
+        } catch (e) {
+          if (this.props.onPDFFailure) {
+            this.props.onPDFFailure({ url: "", error: e });
+          }
         }
       } else {
         this._PDF_DOC = undefined;
