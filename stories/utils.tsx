@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { CogniteClient } from '@cognite/sdk';
+import { CogniteClient } from 'cognite-sdk-v3';
 import { response, orcResults } from './resources';
 import { FileViewerContextObserverPublicProps } from '../src';
 import randomId from '../src/utils/randomId';

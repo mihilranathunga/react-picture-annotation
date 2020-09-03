@@ -14,7 +14,7 @@ import {
   updateAnnotations,
   PendingCogniteAnnotation,
 } from '@cognite/annotations';
-import { FileInfo } from '@cognite/sdk';
+import { FileInfo } from 'cognite-sdk-v3';
 import CogniteFileViewerContext from './FileViewerContext';
 import { SearchField } from './SearchField';
 import {

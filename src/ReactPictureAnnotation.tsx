@@ -8,6 +8,7 @@ import { DefaultAnnotationState } from './annotation/DefaultAnnotationState';
 import DefaultInputSection from './DefaultInputSection';
 import { IShape, IShapeBase, RectShape } from './Shape';
 import Transformer, { ITransformer } from './Transformer';
+import styled from 'styled-components';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdf-hub-bundles.cogniteapp.com/dependencies/pdfjs-dist@2.4.456/build/pdf.worker.min.js`;
 
@@ -274,7 +275,7 @@ export default class ReactPictureAnnotation extends React.Component<
     } = this.props;
     const { showInput, inputPosition } = this.state;
     return (
-      <div className="rp-stage">
+      <Wrapper>
         <canvas
           style={{ width, height }}
           className="rp-image"
@@ -310,7 +311,7 @@ export default class ReactPictureAnnotation extends React.Component<
             {renderItemPreview(this.selectedItem, inputPosition.maxHeight)}
           </div>
         )}
-      </div>
+      </Wrapper>
     );
   }
 
@@ -1088,3 +1089,82 @@ const tryCancelEvent = (event: React.TouchEvent) => {
   event.preventDefault();
   return true;
 };
+
+const Wrapper = styled.div`
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', Helvetica, Arial,
+    sans-serif;
+
+  .rp-image {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+  }
+
+  .rp-shapes {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  .rp-selected-input {
+    position: absolute;
+  }
+
+  .rp-delete {
+    width: 20px;
+    height: 20px;
+    fill: white;
+  }
+
+  .rp-delete-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .rp-default-input-section {
+    display: flex;
+    align-items: stretch;
+    background-color: #3384ff;
+    border: none;
+    border-radius: 5px;
+  }
+
+  .rp-default-input-section input {
+    padding: 10px;
+    color: white;
+    background: transparent;
+    border: 0;
+    outline: none;
+  }
+
+  .rp-default-input-section input::placeholder {
+    color: #94bfff;
+  }
+
+  .rp-default-input-section a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    color: white;
+    font-size: 12px;
+    background-color: #3b5bdb;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    transition: background-color 0.5s, color 0.5s;
+  }
+
+  .rp-default-input-section a:hover,
+  .rp-default-input-section a:active {
+    color: #3384ff;
+    background-color: #5c7cfa;
+  }
+`;

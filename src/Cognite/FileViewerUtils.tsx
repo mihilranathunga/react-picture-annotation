@@ -5,7 +5,8 @@ import {
 } from '@cognite/annotations';
 import { Colors } from '@cognite/cogs.js';
 import { IAnnotation, IRectShapeData } from '..';
-import { FileInfo, CogniteClient } from '@cognite/sdk';
+import { CogniteClient as CogniteClientV2 } from 'cognite-sdk-v2';
+import { CogniteClient as CogniteClientV3, FileInfo } from 'cognite-sdk-v3';
 
 export interface ProposedCogniteAnnotation extends PendingCogniteAnnotation {
   id: string;
@@ -102,7 +103,7 @@ export const isPreviewableImage = (file: FileInfo) => {
 };
 
 export const retrieveDownloadUrl = async (
-  client: CogniteClient,
+  client: CogniteClientV2 | CogniteClientV3,
   fileId: number
 ) => {
   try {
@@ -115,7 +116,7 @@ export const retrieveDownloadUrl = async (
   }
 };
 export const retrieveOCRResults = async (
-  client: CogniteClient,
+  client: CogniteClientV2 | CogniteClientV3,
   fileId: number
 ) => {
   try {

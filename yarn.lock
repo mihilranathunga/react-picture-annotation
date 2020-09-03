@@ -1248,14 +1248,6 @@
     query-string "^5.1.1"
     url "^0.11.0"
 
-"@cognite/sdk@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@cognite/sdk/-/sdk-3.0.0.tgz#99c9f600129e1f525f2214a7f5f11cf90095e25f"
-  integrity sha512-5zyHEh8drYGQ++4NOjdRr/9XIzHdoI7ssL66ZTJ/uGaLxMhXGa/hq2GK8RaN6uGf0PsirOS9VeU08zA8b2baWQ==
-  dependencies:
-    "@cognite/sdk-core" "^1.0.0"
-    lodash "^4.17.11"
-
 "@commitlint/cli@^9.1.2":
   version "9.1.2"
   resolved "https://registry.yarnpkg.com/@commitlint/cli/-/cli-9.1.2.tgz#3773699ea2ee6192f8dc14dd09b479baaaa13cd3"
@@ -1923,6 +1915,13 @@
     invariant "^2.2.3"
     prop-types "^15.6.1"
     react-lifecycles-compat "^3.0.4"
+
+"@rollup/plugin-alias@^3.1.1":
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@rollup/plugin-alias/-/plugin-alias-3.1.1.tgz#bb96cf37fefeb0a953a6566c284855c7d1cd290c"
+  integrity sha512-hNcQY4bpBUIvxekd26DBPgF7BT4mKVNDF5tBG4Zi+3IgwLxGYRY0itHs9D0oLVwXM5pvJDWJlBQro+au8WaUWw==
+  dependencies:
+    slash "^3.0.0"
 
 "@rollup/pluginutils@^3.0.9", "@rollup/pluginutils@^3.1.0":
   version "3.1.0"
@@ -5612,6 +5611,24 @@ code-point-at@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/code-point-at/-/code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77"
   integrity sha1-DQcLTQQ6W+ozovGkDi7bPZpMz3c=
+
+"cognite-sdk-v2@npm:@cognite/sdk@^2.28.0":
+  version "2.33.0"
+  resolved "https://registry.yarnpkg.com/@cognite/sdk/-/sdk-2.33.0.tgz#cfc893ffe259c1011d43c1f41b280b7bf2e72181"
+  integrity sha512-dO2cCO3UbNRx8WaJ3cJdPBe3Rd3qaSBYkocEeW+ew3UzjsxiUOwtz//5HYtb+wXig1aTotoU3iR88NNx09fQfg==
+  dependencies:
+    cross-fetch "^3.0.4"
+    lodash "^4.17.11"
+    query-string "^5.1.1"
+    url "^0.11.0"
+
+"cognite-sdk-v3@npm:@cognite/sdk@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@cognite/sdk/-/sdk-3.0.0.tgz#99c9f600129e1f525f2214a7f5f11cf90095e25f"
+  integrity sha512-5zyHEh8drYGQ++4NOjdRr/9XIzHdoI7ssL66ZTJ/uGaLxMhXGa/hq2GK8RaN6uGf0PsirOS9VeU08zA8b2baWQ==
+  dependencies:
+    "@cognite/sdk-core" "^1.0.0"
+    lodash "^4.17.11"
 
 collapse-white-space@^1.0.0, collapse-white-space@^1.0.2:
   version "1.0.6"

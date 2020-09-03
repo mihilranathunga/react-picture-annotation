@@ -1,5 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { CogniteClient, FileInfo } from '@cognite/sdk';
+import { CogniteClient as CogniteClientV2 } from 'cognite-sdk-v2';
+import { CogniteClient as CogniteClientV3, FileInfo } from 'cognite-sdk-v3';
 import {
   CogniteAnnotation,
   listAnnotationsForFile,
@@ -17,7 +18,7 @@ export type FileViewerContextObserverPublicProps = {
   /**
    * The sdk that was provided via provider
    */
-  sdk: CogniteClient;
+  sdk: CogniteClientV2 | CogniteClientV3;
   /**
    * The current page, available via `usePage()`
    */
@@ -153,7 +154,7 @@ export type ContextProps = {
   /**
    * A CogniteClient to supply to the viewer
    */
-  sdk: CogniteClient;
+  sdk: CogniteClientV2 | CogniteClientV3;
   /**
    * Should fetching of annotations happen automatically? Unless you want to hook annotations fetching/storing into your store or augment annotations from CDF before sending into viewer, and you can trust the viewer to fetch annotations each time a file is supplied.
    */
