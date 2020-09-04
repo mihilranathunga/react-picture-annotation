@@ -30,7 +30,7 @@ export const imgSdk = ({
     create: async (...annotations: any[]) =>
       annotations.map((el) => ({ ...el, id: randomId() })),
   },
-  post: async () => ({ data: { items: { annotations: orcResults } } }),
+  post: async () => ({ data: { items: [{ annotations: orcResults }] } }),
   files: {
     retrieve: async () => [imgFile],
     getDownloadUrls: async () => [{ downloadUrl: '//unsplash.it/800/400' }],
@@ -45,7 +45,7 @@ export const pdfSdk = ({
     create: async (...annotations: any[]) =>
       annotations.map((el) => ({ ...el, id: randomId() })),
   },
-  post: async () => ({ data: { items: { annotations: orcResults } } }),
+  post: async () => ({ data: { items: [{ annotations: orcResults }] } }),
   files: {
     retrieve: async () => [pdfFile],
     getDownloadUrls: async () => [

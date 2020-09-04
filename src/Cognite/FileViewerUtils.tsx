@@ -122,13 +122,13 @@ export const retrieveOCRResults = async (
   try {
     const {
       data: {
-        items: { annotations },
+        items: [{ annotations }],
       },
-    } = await client.post<{ items: { annotations: TextBox[] } }>(
+    } = await client.post<{ items: { annotations: TextBox[] }[] }>(
       `/api/playground/projects/${client.project}/context/pnid/ocr`,
       { data: { fileId } }
     );
-    return annotations;
+    return annotations || [];
   } catch (e) {
     return [];
   }

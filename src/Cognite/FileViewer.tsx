@@ -31,7 +31,7 @@ export type ViewerEditCallbacks = {
   onUpdate: <T extends ProposedCogniteAnnotation | CogniteAnnotation>(
     annotation: T
   ) => T | false;
-  onCreate: <T extends PendingCogniteAnnotation | CogniteAnnotation>(
+  onCreate: <T extends PendingCogniteAnnotation>(
     annotation: T
   ) => T | false;
 };
@@ -56,7 +56,7 @@ export type ViewerProps = {
   /**
    * Used when `disableAutoFetch` is true to supply `annotations` to display
    */
-  annotations?: CogniteAnnotation[];
+  annotations?: (CogniteAnnotation | ProposedCogniteAnnotation)[];
   /**
    * Callbacks when something is created or edited. Return false from function if you want to handle it in a custom manner.
    */
@@ -360,7 +360,7 @@ export const FileViewer = ({
         xMax: annotation.mark.x + annotation.mark.width,
         yMax: annotation.mark.y + annotation.mark.height,
       },
-    } as ProposedCogniteAnnotation);
+    } as PendingCogniteAnnotation);
     if (pendingAnnotation) {
       const [createdAnnotation] = await createAnnotations(sdk, [
         pendingAnnotation,
