@@ -980,9 +980,15 @@ export default class ReactPictureAnnotation extends React.Component<
   private handlePinchChange = (touches: React.TouchList) => {
     const length = getPinchLength(touches);
     const midpoint = getPinchMidpoint(touches);
+    // if (Math.abs(Math.round(length)-Math.round(this.lastPinchLength || 0))<2){
+    //   return;
+    // }
+
     let scale = this.lastPinchLength
       ? (this.scaleState.scale * length) / this.lastPinchLength // sometimes we get a touchchange before a touchstart when pinching
       : this.scaleState.scale;
+
+    this.lastPinchLength = length;
 
     if (scale > 10) {
       scale = 10;
