@@ -22,6 +22,7 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
           yarn install --frozen-lockfile
+          rm .npmrc
 
       - name: Linting
         run: yarn lint
