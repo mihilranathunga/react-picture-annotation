@@ -53,6 +53,7 @@ interface IReactPictureAnnotationProps {
   onAnnotationUpdate?: (annotation: IAnnotation) => void;
   onAnnotationCreate?: (annotation: IAnnotation) => void;
   onPDFLoaded?: (props: { pages: number }) => void;
+  onPDFFailure?: (props: { url: string; error: Error }) => void;
   onLoading: (loading: boolean) => void;
   onReady?: (element: ReactPictureAnnotation) => void;
 }
@@ -133,9 +134,16 @@ export default class ReactPictureAnnotation extends React.Component<
     const currentCanvas = this.canvasRef.current;
     const currentImageCanvas = this.imageCanvasRef.current;
     if (this.props.pdf) {
-      this._PDF_DOC = await pdfjs.getDocument({ url: this.props.pdf }).promise;
-      if (this.props.onPDFLoaded) {
-        this.props.onPDFLoaded({ pages: this._PDF_DOC.numPages });
+      try {
+        this._PDF_DOC = await pdfjs.getDocument({ url: this.props.pdf })
+          .promise;
+        if (this.props.onPDFLoaded) {
+          this.props.onPDFLoaded({ pages: this._PDF_DOC.numPages });
+        }
+      } catch (e) {
+        if (this.props.onPDFFailure) {
+          this.props.onPDFFailure({ url: this.props.pdf, error: e });
+        }
       }
     }
     if (currentCanvas && currentImageCanvas) {
@@ -163,9 +171,15 @@ export default class ReactPictureAnnotation extends React.Component<
     }
     if (prevProps.pdf !== pdf) {
       if (pdf) {
-        this._PDF_DOC = await pdfjs.getDocument({ url: pdf }).promise;
-        if (this.props.onPDFLoaded) {
-          this.props.onPDFLoaded({ pages: this._PDF_DOC.numPages });
+        try {
+          this._PDF_DOC = await pdfjs.getDocument({ url: pdf }).promise;
+          if (this.props.onPDFLoaded) {
+            this.props.onPDFLoaded({ pages: this._PDF_DOC.numPages });
+          }
+        } catch (e) {
+          if (this.props.onPDFFailure) {
+            this.props.onPDFFailure({ url: "", error: e });
+          }
         }
       } else {
         this._PDF_DOC = undefined;
@@ -525,7 +539,8 @@ export default class ReactPictureAnnotation extends React.Component<
     drawText: boolean = true,
     drawBox: boolean = true,
     drawCustom: boolean = true,
-    immediateDownload: boolean = true
+    immediateDownload: boolean = true,
+    downloadScale: number = 4
   ) => {
     if (!this._PDF_DOC || !this.currentImageElement) {
       return;
@@ -544,13 +559,11 @@ export default class ReactPictureAnnotation extends React.Component<
     // Get the width and height of the first page
     const { width: pageWidth, height: pageHeight } = currentPage.getSize();
 
-    const DOWNLOAD_SCALE = 4;
+    const bCanvas = document.createElement("canvas");
+    const bCtx = bCanvas.getContext("2d")!;
 
-    const bCanvas = document.createElement('canvas');
-    const bCtx = bCanvas.getContext('2d')!;
-
-    bCanvas.width = pageWidth * DOWNLOAD_SCALE;
-    bCanvas.height = pageHeight * DOWNLOAD_SCALE;
+    bCanvas.width = pageWidth * downloadScale;
+    bCanvas.height = pageHeight * downloadScale;
 
     if (annotationData) {
       await Promise.all(
@@ -600,8 +613,8 @@ export default class ReactPictureAnnotation extends React.Component<
 
           const noXYRotate = !(pageRotation === 90 || pageRotation === 270);
           if (el.mark.draw) {
-            const newX = drawX * pageWidth * DOWNLOAD_SCALE;
-            const newY = (1 - drawY) * pageHeight * DOWNLOAD_SCALE;
+            const newX = drawX * pageWidth * downloadScale;
+            const newY = (1 - drawY) * pageHeight * downloadScale;
             bCtx.translate(0, 0);
             bCtx.save();
             bCtx.translate(newX, newY);
@@ -610,8 +623,8 @@ export default class ReactPictureAnnotation extends React.Component<
               bCtx,
               0,
               0,
-              width * pageWidth * DOWNLOAD_SCALE,
-              height * pageHeight * DOWNLOAD_SCALE,
+              width * pageWidth * downloadScale,
+              height * pageHeight * downloadScale,
               1,
               true
             );
