@@ -243,9 +243,7 @@ const FileViewerProvider = ({
         selectedAnnotation,
         query,
         setQuery,
-        setSelectedAnnotation: (anno) => {
-          setSelectedAnnotation(anno);
-        },
+        setSelectedAnnotation,
       }}
     >
       {children}
