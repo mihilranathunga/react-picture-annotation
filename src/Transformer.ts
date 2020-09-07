@@ -1,4 +1,4 @@
-import { IShape, IShapeBase } from "Shape";
+import { IShape, IShapeBase } from 'Shape';
 
 const NODE_WIDTH = 10;
 
@@ -63,7 +63,7 @@ export default class Transformer implements ITransformer {
   ) => {
     const allCentersTable = this.getAllCentersTable();
     canvas2D.save();
-    canvas2D.fillStyle = "#5c7cfa";
+    canvas2D.fillStyle = '#5c7cfa';
     if (this.editable) {
       for (const item of allCentersTable) {
         const { x, y, width, height } = calculateTruePosition({

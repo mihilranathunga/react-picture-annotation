@@ -1,6 +1,6 @@
-import { ReactPictureAnnotation } from "index";
-import { IAnnotationState } from "./AnnotationState";
-import { DefaultAnnotationState } from "./DefaultAnnotationState";
+import { ReactPictureAnnotation } from 'index';
+import { IAnnotationState } from './AnnotationState';
+import { DefaultAnnotationState } from './DefaultAnnotationState';
 
 export default class CreatingAnnotationState implements IAnnotationState {
   private context: ReactPictureAnnotation;

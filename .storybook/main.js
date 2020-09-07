@@ -1,10 +1,25 @@
 const path = require('path');
 
 module.exports = {
-  stories: ['../stories/*.stories.tsx'],
-  typescript: { reactDocgen: false },
+  stories: ['../stories/*.stories.tsx', '../stories/*.stories.mdx'],
+  typescript: {
+    check: false,
+    checkOptions: {},
+    reactDocgen: 'react-docgen-typescript',
+    reactDocgenTypescriptOptions: {
+      shouldRemoveUndefinedFromOptional: false,
+      shouldExtractLiteralValuesFromEnum: true,
+      propFilter: (prop) =>
+        prop.parent ? !/node_modules/.test(prop.parent.fileName) : true,
+    },
+  },
   addons: [
+    '@storybook/addon-knobs',
     '@storybook/addon-links',
+    {
+      name: '@storybook/addon-docs',
+      options: { configureJSX: true },
+    },
     '@storybook/addon-essentials',
     {
       name: '@storybook/addon-storysource',

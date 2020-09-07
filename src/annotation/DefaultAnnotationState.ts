@@ -1,11 +1,11 @@
-import ReactPictureAnnotation from "../ReactPictureAnnotation";
-import { RectShape } from "../Shape";
-import Transformer from "../Transformer";
-import randomId from "../utils/randomId";
-import { IAnnotationState } from "./AnnotationState";
-import CreatingAnnotationState from "./CreatingAnnotationState";
-import DraggingAnnotationState from "./DraggingAnnotationState";
-import TransformationState from "./TransfromationState";
+import ReactPictureAnnotation from '../ReactPictureAnnotation';
+import { RectShape } from '../Shape';
+import Transformer from '../Transformer';
+import randomId from '../utils/randomId';
+import { IAnnotationState } from './AnnotationState';
+import CreatingAnnotationState from './CreatingAnnotationState';
+import DraggingAnnotationState from './DraggingAnnotationState';
+import TransformationState from './TransfromationState';
 
 export class DefaultAnnotationState implements IAnnotationState {
   private context: ReactPictureAnnotation;
@@ -68,7 +68,8 @@ export class DefaultAnnotationState implements IAnnotationState {
           positionX,
           positionY,
           this.context.calculateShapePositionNoOffset
-        )
+        ) &&
+        !shapes[i].getAnnotationData().disableClick
       ) {
         if (this.context.selectedId !== shapes[i].getAnnotationData().id) {
           this.hasSelected = true;
@@ -101,8 +102,9 @@ export class DefaultAnnotationState implements IAnnotationState {
               y: positionY,
               width: 0,
               height: 0,
-              type: "RECT",
+              type: 'RECT',
             },
+            page: this.context.props.page || 1,
           },
           onShapeChange,
           this.context.getOriginalImageSize
@@ -126,8 +128,8 @@ export class DefaultAnnotationState implements IAnnotationState {
           (shapes[i].getAnnotationData().mark.strokeWidth || 4) + 10
         )
       ) {
-        const { id } = shapes[i].getAnnotationData();
-        if (this.context.selectedId !== id) {
+        const { id, disableClick } = shapes[i].getAnnotationData();
+        if (this.context.selectedId !== id && !disableClick) {
           this.context.selectedId = id;
           onShapeChange();
         }
