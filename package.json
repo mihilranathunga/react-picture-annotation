@@ -29,9 +29,9 @@
   "author": "Bay",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Kunduin/react-picture-annotation/issues"
+    "url": "https://github.com/cognitedata/react-picture-annotation/issues"
   },
-  "homepage": "https://github.com/Kunduin/react-picture-annotation#readme",
+  "homepage": "https://github.com/cognitedata/react-picture-annotation#readme",
   "peerDependencies": {
     "react": ">=16.0.0",
     "react-dom": ">=16.0.0"
