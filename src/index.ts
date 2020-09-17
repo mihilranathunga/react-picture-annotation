@@ -1,5 +1,5 @@
-export { default as ReactPictureAnnotation } from "./ReactPictureAnnotation";
-export { default as DefaultInputSection } from "./DefaultInputSection";
+export { ReactPictureAnnotation } from "./ReactPictureAnnotation";
+export { DefaultInputSection } from "./DefaultInputSection";
 export * from "./Shape";
 export * from "./Annotation";
 export * from "./ReactPictureAnnotation";

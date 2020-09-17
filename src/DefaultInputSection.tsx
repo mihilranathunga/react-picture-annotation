@@ -8,7 +8,7 @@ export interface IDefaultInputSection {
   onDelete: () => void;
 }
 
-export default ({ annotation, onChange, onDelete }: IDefaultInputSection) => {
+export const DefaultInputSection = ({ annotation, onChange, onDelete }: IDefaultInputSection) => {
   return (
     <div className="rp-default-input-section">
       <input
