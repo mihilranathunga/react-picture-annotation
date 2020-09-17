@@ -1239,17 +1239,17 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@cognite/annotations@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@cognite/annotations/-/annotations-0.2.1.tgz#001ce359c50cb078c690b345948e4998d2560a83"
-  integrity sha512-SHBrbDzrvzAtWHfe2bowlVe+OSqBSdD2zL/I6wRx3xNOIQl5lmLoMoPeejRPPAh5KzQHx3r4aze8rN1oZxujow==
+"@cognite/annotations@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@cognite/annotations/-/annotations-1.0.3.tgz#bbd054e6058ef287c1bf1952ce3201afbc2bf0c2"
+  integrity sha512-2b4oUTrEK+gZ5afK2jxcyWqAPnoEgJUrEvQ+rxNriLek7T48e/RVRLNMhBJ/rxt1hfl/OhBjxfxb4FTIXuR9KA==
   dependencies:
     lodash "^4.17.20"
 
-"@cognite/cogs.js@^1.21.2":
-  version "1.21.2"
-  resolved "https://registry.yarnpkg.com/@cognite/cogs.js/-/cogs.js-1.21.2.tgz#f6d94ea1159a93815bf9a094f17c2d8e8bb6e6d3"
-  integrity sha512-lWYTXAP5jtZe7Br1iyy8ubc/7BITEWzODiKfZN02dl4BMaLV2KpGGA3DMP5WwcnenhbAhnr/tjN49iYdf2ch/w==
+"@cognite/cogs.js@^1.21.3":
+  version "1.21.3"
+  resolved "https://registry.yarnpkg.com/@cognite/cogs.js/-/cogs.js-1.21.3.tgz#3c69e49c9600a4b4d9788051568c18e1adb093f9"
+  integrity sha512-2yTjk3p5SRkyxZbFdLM6j7AyRSIeI4sVDW67O8lEn1fJh4RI+0U373thcFVM9QaID22NdjO3ZhZ+RG5fAEgXrA==
   dependencies:
     "@tippyjs/react" "4.0.2"
     color "^3.1.2"
@@ -1258,10 +1258,10 @@
     react-modal "^3.11.2"
     tippy.js "6.2.0"
 
-"@cognite/sdk-core@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@cognite/sdk-core/-/sdk-core-1.0.0.tgz#8b2ea9a30dc54396cd4980633b92c1714bc27864"
-  integrity sha512-zNarUtJc9RwruDDYukfcUw4FKP9LMc1fMwDYde7WE465kiekCfaE5iEhxNd5TP0tp8fmGyT2YvI/b8Ka9nqu1A==
+"@cognite/sdk-core@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@cognite/sdk-core/-/sdk-core-1.0.1.tgz#1c8234e6c6bec61c0a62eb84d6eb3a25e53c682e"
+  integrity sha512-Mfxfw4As0SEzD8RTGsQ0POzI29Z/9/tS3qSd1LKr0S+Cc6V4bRf3hXFqrSaaBUBP2AZ8EPwaWR7W21nxCdSyEQ==
   dependencies:
     cross-fetch "^3.0.4"
     lodash "^4.17.11"
@@ -5704,12 +5704,12 @@ code-point-at@^1.0.0:
     query-string "^5.1.1"
     url "^0.11.0"
 
-"cognite-sdk-v3@npm:@cognite/sdk@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@cognite/sdk/-/sdk-3.0.0.tgz#99c9f600129e1f525f2214a7f5f11cf90095e25f"
-  integrity sha512-5zyHEh8drYGQ++4NOjdRr/9XIzHdoI7ssL66ZTJ/uGaLxMhXGa/hq2GK8RaN6uGf0PsirOS9VeU08zA8b2baWQ==
+"cognite-sdk-v3@npm:@cognite/sdk@^3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@cognite/sdk/-/sdk-3.1.0.tgz#c598a7bb7ab98d7af247a83f9f42ab99de201dcd"
+  integrity sha512-XxpypIpCmEM4nVeggG18Iaoaeq/ybItegwvnxMqqySl4P9idzm8l/qn5/TAl8LfpvXgy5+PaRNxndQGhv7Bn1Q==
   dependencies:
-    "@cognite/sdk-core" "^1.0.0"
+    "@cognite/sdk-core" "^1.0.1"
     lodash "^4.17.11"
 
 collapse-white-space@^1.0.0, collapse-white-space@^1.0.2:
