@@ -1,5 +1,6 @@
 /* eslint-disable global-require */
-import babel from 'rollup-plugin-babel';
+import babel from '@rollup/plugin-babel';
+import commonjs from '@rollup/plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import alias from '@rollup/plugin-alias';
 import path from 'path';
@@ -39,7 +40,9 @@ export default [
       babel({
         exclude: 'node_modules/**',
         extensions: ['.ts', '.tsx'],
+        babelHelpers: 'runtime',
       }),
+      commonjs(),
     ],
     external: [
       ...Object.keys(pkg.dependencies || {}),

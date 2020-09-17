@@ -5,7 +5,7 @@ import parseColor from 'parse-color';
 import { IAnnotation } from './Annotation';
 import { IAnnotationState } from './annotation/AnnotationState';
 import { DefaultAnnotationState } from './annotation/DefaultAnnotationState';
-import DefaultInputSection from './DefaultInputSection';
+import {DefaultInputSection} from './DefaultInputSection';
 import { IShape, IShapeBase, RectShape } from './Shape';
 import Transformer, { ITransformer } from './Transformer';
 import styled from 'styled-components';
@@ -70,7 +70,7 @@ const defaultState: IStageState = {
   originY: 0,
 };
 
-export default class ReactPictureAnnotation extends React.Component<
+export class ReactPictureAnnotation extends React.Component<
   IReactPictureAnnotationProps
 > {
   set selectedId(value: string | null) {

@@ -1,11 +1,11 @@
-import ReactPictureAnnotation from '../ReactPictureAnnotation';
-import { RectShape } from '../Shape';
-import Transformer from '../Transformer';
-import randomId from '../utils/randomId';
-import { IAnnotationState } from './AnnotationState';
-import CreatingAnnotationState from './CreatingAnnotationState';
-import DraggingAnnotationState from './DraggingAnnotationState';
-import TransformationState from './TransfromationState';
+import { ReactPictureAnnotation } from "../ReactPictureAnnotation";
+import { RectShape } from "../Shape";
+import Transformer from "../Transformer";
+import randomId from "../utils/randomId";
+import { IAnnotationState } from "./AnnotationState";
+import CreatingAnnotationState from "./CreatingAnnotationState";
+import DraggingAnnotationState from "./DraggingAnnotationState";
+import TransformationState from "./TransfromationState";
 
 export class DefaultAnnotationState implements IAnnotationState {
   private context: ReactPictureAnnotation;
@@ -102,7 +102,7 @@ export class DefaultAnnotationState implements IAnnotationState {
               y: positionY,
               width: 0,
               height: 0,
-              type: 'RECT',
+              type: "RECT",
             },
             page: this.context.props.page || 1,
           },
