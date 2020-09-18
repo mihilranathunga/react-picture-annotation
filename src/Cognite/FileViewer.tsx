@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useRef, useMemo, useContext } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useContext } from "react";
 import {
   ReactPictureAnnotation,
   RenderItemPreviewFunction,
   IAnnotation,
   IRectShapeData,
-} from '..';
-import { Button, Colors, Pagination, Dropdown, Menu } from '@cognite/cogs.js';
-import styled from 'styled-components';
+} from "..";
+import { Button, Colors, Pagination, Dropdown, Menu } from "@cognite/cogs.js";
+import styled from "styled-components";
 import {
   CogniteAnnotation,
   CURRENT_VERSION,
   createAnnotations,
   updateAnnotations,
   PendingCogniteAnnotation,
-} from '@cognite/annotations';
-import { FileInfo } from 'cognite-sdk-v3';
-import CogniteFileViewerContext from './FileViewerContext';
-import { SearchField } from './SearchField';
+} from "@cognite/annotations";
+import { FileInfo } from "cognite-sdk-v3";
+import CogniteFileViewerContext from "./FileViewerContext";
+import { SearchField } from "./SearchField";
 import {
   ProposedCogniteAnnotation,
   convertCogniteAnnotationToIAnnotation,
@@ -25,15 +25,13 @@ import {
   isPreviewableImage,
   retrieveOCRResults,
   TextBox,
-} from './FileViewerUtils';
+} from "./FileViewerUtils";
 
 export type ViewerEditCallbacks = {
   onUpdate: <T extends ProposedCogniteAnnotation | CogniteAnnotation>(
     annotation: T
   ) => T | false;
-  onCreate: <T extends PendingCogniteAnnotation>(
-    annotation: T
-  ) => T | false;
+  onCreate: <T extends PendingCogniteAnnotation>(annotation: T) => T | false;
 };
 
 export type ViewerProps = {
@@ -69,6 +67,10 @@ export type ViewerProps = {
     isSelected: boolean
   ) => IAnnotation<IRectShapeData>;
   /**
+   * Renders an always visible small draggable display connected to annotation with an arrow.
+   */
+  renderArrowPreview?: RenderItemPreviewFunction;
+  /**
    * Override how an annotation box is drawn on top of the file
    */
   renderItemPreview?: RenderItemPreviewFunction;
@@ -81,7 +83,7 @@ export type ViewerProps = {
   /**
    * Should pagination be shown, and what size? One page files will have no pagination displayed regardless of settings!
    */
-  pagination?: false | 'small' | 'normal';
+  pagination?: false | "small" | "normal";
   /**
    * Should controls (zoom levels) be hidden.
    */
@@ -115,7 +117,7 @@ export const FileViewer = ({
   renderItemPreview = () => <></>,
   creatable,
   editable,
-  pagination = 'normal',
+  pagination = "normal",
   hideControls = false,
   loader,
   hideDownload = false,
@@ -123,6 +125,7 @@ export const FileViewer = ({
   onAnnotationSelected,
   renderAnnotation = convertCogniteAnnotationToIAnnotation,
   annotations: annotationsFromProps,
+  renderArrowPreview, // TODO
 }: ViewerProps) => {
   const {
     annotations,
@@ -203,7 +206,7 @@ export const FileViewer = ({
             query.length !== 0 &&
             query
               .toLowerCase()
-              .split(',')
+              .split(",")
               .some((el) => box.text.toLowerCase().includes(el))
         )
         .map(
@@ -215,7 +218,7 @@ export const FileViewer = ({
                 y: el.boundingBox.yMin,
                 width: el.boundingBox.xMax - el.boundingBox.xMin,
                 height: el.boundingBox.yMax - el.boundingBox.yMin,
-                backgroundColor: `${Colors['midblue-4'].hex()}88`,
+                backgroundColor: `${Colors["midblue-4"].hex()}88`,
                 strokeWidth: 0,
               },
               disableClick: true,
@@ -273,12 +276,12 @@ export const FileViewer = ({
       }
     };
     // set resize listener
-    window.addEventListener('resize', resizeListener);
+    window.addEventListener("resize", resizeListener);
 
     // clean up function
     return () => {
       // remove resize listener
-      window.removeEventListener('resize', resizeListener);
+      window.removeEventListener("resize", resizeListener);
     };
   }, []);
 
@@ -316,7 +319,7 @@ export const FileViewer = ({
         },
       });
       if (pendingAnnotation) {
-        if (typeof pendingAnnotation.id === 'number') {
+        if (typeof pendingAnnotation.id === "number") {
           await updateAnnotations(sdk, [
             {
               id: pendingAnnotation.id,
@@ -347,12 +350,12 @@ export const FileViewer = ({
     annotation: IAnnotation<IRectShapeData>
   ) => {
     const pendingAnnotation = editCallbacks.onCreate({
-      status: 'verified',
+      status: "verified",
       ...(file!.externalId
         ? { fileExternalId: file!.externalId }
         : { fileId: file!.id }),
       version: CURRENT_VERSION,
-      label: '',
+      label: "",
       page: annotation.page || page,
       box: {
         xMin: annotation.mark.x,
@@ -382,13 +385,13 @@ export const FileViewer = ({
     <div
       ref={wrapperRef}
       style={{
-        width: '100%',
-        height: '100%',
-        position: 'relative',
+        width: "100%",
+        height: "100%",
+        position: "relative",
       }}
     >
       {loading && (
-        <div style={{ position: 'absolute', height: '100%', width: '100%' }}>
+        <div style={{ position: "absolute", height: "100%", width: "100%" }}>
           {loader}
         </div>
       )}
@@ -414,7 +417,7 @@ export const FileViewer = ({
         onAnnotationCreate={onCreateAnnotation}
         onAnnotationUpdate={onUpdateAnnotation}
         pdf={
-          file && file.mimeType === 'application/pdf' ? previewUrl : undefined
+          file && file.mimeType === "application/pdf" ? previewUrl : undefined
         }
         image={file && isImage ? previewUrl : undefined}
         creatable={creatable}
@@ -423,6 +426,7 @@ export const FileViewer = ({
         page={page}
         onLoading={(isLoading) => setLoading(isLoading)}
         renderItemPreview={renderItemPreview}
+        renderArrowPreview={renderArrowPreview}
         onPDFLoaded={async ({ pages }) => {
           setLoading(false);
           setTotalPages(pages);
@@ -434,7 +438,7 @@ export const FileViewer = ({
           current={page || 1}
           pageSize={1}
           showPrevNextJumpers={true}
-          simple={pagination === 'small'}
+          simple={pagination === "small"}
           onChange={(newPageNum) => setPage && setPage(newPageNum)}
         />
       )}
@@ -477,7 +481,7 @@ export const FileViewer = ({
                 <Menu.Item
                   onClick={() =>
                     download!(
-                      file ? file.name : 'export.pdf',
+                      file ? file.name : "export.pdf",
                       false,
                       false,
                       false
@@ -489,7 +493,7 @@ export const FileViewer = ({
                 <Menu.Item
                   onClick={() =>
                     download!(
-                      file ? file.name : 'export.pdf',
+                      file ? file.name : "export.pdf",
                       false,
                       true,
                       true
@@ -518,7 +522,7 @@ const DocumentPagination = styled(Pagination)`
     background: #fff;
     border-radius: 50px;
     padding: 12px 24px;
-    box-shadow: 0px 0px 8px ${Colors['greyscale-grey3'].hex()};
+    box-shadow: 0px 0px 8px ${Colors["greyscale-grey3"].hex()};
   }
 `;
 
