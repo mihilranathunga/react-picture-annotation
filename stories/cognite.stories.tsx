@@ -193,7 +193,7 @@ export const BoxAndArrows = () => {
       hideLabel={true}
       pagination={false}
       onAnnotationSelected={action("onAnnotationSelected")}
-      renderArrowPreview={(annotation: any) => <PreviewBox>{13}</PreviewBox>}
+      renderArrowPreview={(annotation: any) => <PreviewBox>13</PreviewBox>}
     />
   );
 };

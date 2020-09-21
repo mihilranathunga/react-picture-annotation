@@ -7,6 +7,7 @@ import { IAnnotationState } from "./annotation/AnnotationState";
 import { DefaultAnnotationState } from "./annotation/DefaultAnnotationState";
 import { DefaultInputSection } from "./DefaultInputSection";
 import { IShape, IShapeBase, RectShape } from "./Shape";
+import ArrowBox from "./ArrowBox";
 import Transformer, { ITransformer } from "./Transformer";
 import styled from "styled-components";
 
@@ -49,7 +50,7 @@ interface IReactPictureAnnotationProps {
   creatable?: boolean;
   hoverable?: boolean;
   drawLabel: boolean;
-  renderArrowPreview?: RenderItemPreviewFunction; // TODO type
+  renderArrowPreview?: any; // TODO type
   renderItemPreview?: RenderItemPreviewFunction;
   onAnnotationUpdate?: (annotation: IAnnotation) => void;
   onAnnotationCreate?: (annotation: IAnnotation) => void;
@@ -111,6 +112,7 @@ export class ReactPictureAnnotation extends React.Component<
     arrowPreviewPositions: {}, // TODO types
     annotationsLoaded: false,
     showInput: false,
+    hideArrowPreview: false,
   };
   private currentAnnotationData: IAnnotation[] = [];
   private selectedIdTrueValue: string | null = null;
@@ -288,9 +290,10 @@ export class ReactPictureAnnotation extends React.Component<
     const newArrowPreviewPositions = [];
     for (const annotation in this.props.annotationData) {
       newArrowPreviewPositions[this.props.annotationData[annotation].id] = {
-        left: 0,
-        top: 0,
-        maxHeight: 0,
+        x: 0,
+        y: 0,
+        offsetX: 20,
+        offsetY: 50,
       };
     }
     this.setState({
@@ -314,42 +317,41 @@ export class ReactPictureAnnotation extends React.Component<
       ),
       renderArrowPreview,
     } = this.props;
-    const { showInput, inputPosition, arrowPreviewPositions } = this.state;
+    const {
+      showInput,
+      inputPosition,
+      arrowPreviewPositions,
+      hideArrowPreview,
+    } = this.state;
 
-    const showArrowPreview = () => {
-      if (renderArrowPreview && annotationData) {
-        return annotationData.map((annotation) => {
-          const arrowPreview: any = arrowPreviewPositions[annotation.id];
-          if (arrowPreview)
-            return (
-              <div
-                className="rp-selected-input"
-                style={{ ...arrowPreview, backgroundColor: "red" }}
-              >
-                {renderArrowPreview(annotation, arrowPreview.maxHeight)}
-              </div>
-            );
-        });
-      }
-    };
-    const showPreview = () => {
-      if (this.selectedItem && showInput) {
-        return (
-          <div
-            className="rp-selected-input"
-            style={inputPosition}
-            onMouseEnter={() => {
-              this.selectedId = this.selectedItem!.id;
-              if (!this.props.hoverable) {
-                this.currentAnnotationState.onMouseUp();
-              }
-            }}
-          >
-            {renderItemPreview(this.selectedItem, inputPosition.maxHeight)}
-          </div>
-        );
-      }
-    };
+    const showArrowPreview = () =>
+      annotationData?.map((annotation: any) => {
+        const arrowPosition: any = arrowPreviewPositions[annotation.id];
+        if (arrowPosition) {
+          return (
+            <StyledArrowBox
+              annotation={annotation}
+              arrowPosition={arrowPosition}
+              renderArrowWithBox={renderArrowPreview}
+            />
+          );
+        }
+      });
+
+    const showPreview = (selectedItem: any) => (
+      <div
+        className="rp-selected-input"
+        style={inputPosition}
+        onMouseEnter={() => {
+          this.selectedId = this.selectedItem!.id;
+          if (!this.props.hoverable) {
+            this.currentAnnotationState.onMouseUp();
+          }
+        }}
+      >
+        {renderItemPreview(selectedItem, inputPosition.maxHeight)}
+      </div>
+    );
 
     return (
       <Wrapper>
@@ -374,8 +376,11 @@ export class ReactPictureAnnotation extends React.Component<
           onTouchEnd={this.onTouchEnd}
           onTouchMove={this.onTouchMove}
         />
-        {showPreview()}
-        {showArrowPreview()}
+        {this.selectedItem && showInput && showPreview(this.selectedItem)}
+        {renderArrowPreview &&
+          annotationData &&
+          !hideArrowPreview &&
+          showArrowPreview()}
       </Wrapper>
     );
   }
@@ -419,10 +424,8 @@ export class ReactPictureAnnotation extends React.Component<
               ...this.state.arrowPreviewPositions,
               [itemId]: {
                 ...oldArrowPreview,
-                left: x,
-                top: y,
-                overflow: "visible",
-                zIndex: 1000,
+                x,
+                y,
               },
             },
           });
@@ -966,7 +969,7 @@ export class ReactPictureAnnotation extends React.Component<
       this.scaleState.originY =
         this.startDrag.originY + (offsetY - this.startDrag.y);
 
-      this.setState({ imageScale: this.scaleState });
+      this.setState({ imageScale: this.scaleState, hideArrowPreview: true });
 
       requestAnimationFrame(() => {
         this.onShapeChange();
@@ -978,6 +981,7 @@ export class ReactPictureAnnotation extends React.Component<
   private onMouseUp: MouseEventHandler<HTMLCanvasElement> = () => {
     this.currentAnnotationState.onMouseUp();
     this.startDrag = undefined;
+    this.setState({ hideArrowPreview: false });
   };
 
   private onTouchStart: TouchEventHandler<HTMLCanvasElement> = (event) => {
@@ -1169,11 +1173,19 @@ const tryCancelEvent = (event: React.TouchEvent) => {
   return true;
 };
 
+const StyledArrowBox = styled(ArrowBox)`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+`;
+
 const Wrapper = styled.div`
-  position: relative;
+  position: absolute;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial,
     sans-serif;
+  width: 100%;
+  height: 100%;
 
   .rp-image {
     position: absolute;
