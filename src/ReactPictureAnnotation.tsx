@@ -292,7 +292,7 @@ export class ReactPictureAnnotation extends React.Component<
       newArrowPreviewPositions[this.props.annotationData[annotation].id] = {
         x: 0,
         y: 0,
-        offsetX: 20,
+        offsetX: -20,
         offsetY: 50,
       };
     }
@@ -301,6 +301,21 @@ export class ReactPictureAnnotation extends React.Component<
       arrowPreviewPositions: newArrowPreviewPositions,
     });
     this.onShapeChange();
+  };
+
+  public changeBoxPosition = (annotation: any, offsetX: any, offsetY: any) => {
+    const previousPosition = this.state.arrowPreviewPositions[annotation.id];
+    const newPositions = {
+      ...this.state.arrowPreviewPositions,
+      [annotation.id]: {
+        ...previousPosition,
+        offsetX: previousPosition.offsetX - offsetX,
+        offsetY: previousPosition.offsetY + offsetY,
+      },
+    };
+    this.setState({
+      arrowPreviewPositions: newPositions,
+    });
   };
 
   public render() {
@@ -333,6 +348,7 @@ export class ReactPictureAnnotation extends React.Component<
               annotation={annotation}
               arrowPosition={arrowPosition}
               renderArrowWithBox={renderArrowPreview}
+              changeBoxPosition={this.changeBoxPosition}
             />
           );
         }
@@ -1015,6 +1031,7 @@ export class ReactPictureAnnotation extends React.Component<
       clientX,
       clientY
     );
+    this.setState({ hideArrowPreview: true });
     if (editable) {
       this.currentAnnotationState.onMouseMove(positionX, positionY);
     } else {
@@ -1045,6 +1062,7 @@ export class ReactPictureAnnotation extends React.Component<
   private onTouchEnd: TouchEventHandler<HTMLCanvasElement> = () => {
     this.currentAnnotationState.onMouseUp();
     this.startDrag = undefined;
+    this.setState({ hideArrowPreview: false });
   };
 
   private handlePinchChange = (touches: React.TouchList) => {
@@ -1177,6 +1195,7 @@ const StyledArrowBox = styled(ArrowBox)`
   position: absolute;
   width: 100%;
   height: 100%;
+  pointer-events: none;
 `;
 
 const Wrapper = styled.div`

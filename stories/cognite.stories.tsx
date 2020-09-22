@@ -172,7 +172,7 @@ const Preview = styled.div`
   border: 1px solid orange;
   border-top: 5px solid orange;
   box-sizing: border-box;
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.85);
   user-select: none;
   font-size: 0.8em;
   line-height: 0.8em;
@@ -188,7 +188,7 @@ export const BoxAndArrows = () => {
     <CogniteFileViewer
       sdk={pdfSdk}
       file={pdfFile}
-      editable={false}
+      editable={true}
       creatable={false}
       hideLabel={true}
       pagination={false}

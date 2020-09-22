@@ -1,13 +1,19 @@
-import React, { MouseEventHandler, TouchEventHandler } from "react";
+import React, { MouseEventHandler } from "react";
 import styled from "styled-components";
 import { ArcherContainer, ArcherElement } from "react-archer";
 
 interface ArrowPosition {
   arrowPosition: any;
 }
-interface ArrowBoxProps extends ArrowPosition {
+interface ArrowBoxEvents {
+  onMouseDown: MouseEventHandler;
+  onMouseMove: MouseEventHandler;
+  onMouseUp: MouseEventHandler;
+}
+interface ArrowBoxProps extends ArrowPosition, ArrowBoxEvents {
   annotation: any;
   renderArrowWithBox: any;
+  changeBoxPosition: any;
 }
 
 const SourcePoint = styled.div.attrs((props: ArrowPosition) => ({
@@ -17,7 +23,8 @@ const SourcePoint = styled.div.attrs((props: ArrowPosition) => ({
   },
 }))<ArrowPosition>`
   position: absolute;
-  z-index: 1000;
+  pointer-events: auto;
+  cursor: grab;
 `;
 const TargetPoint = styled.div.attrs((props: ArrowPosition) => ({
   style: {
@@ -31,51 +38,52 @@ const Dummy = styled.div`
   width: 1px;
   height: 1px;
 `;
+// TODO remove !important
 const StyledArcherContainer = styled(ArcherContainer)`
   width: 100%;
   height: 100%;
+  pointer-events: none;
   position: absolute !important;
-  z-index: -1;
 `;
 
 export default class ArrowBox extends React.Component<ArrowBoxProps> {
-  private onMouseDown: MouseEventHandler<HTMLCanvasElement> = (event) => {
-    // const { offsetX, offsetY } = event.nativeEvent;
-    // const { positionX, positionY } = this.calculateMousePosition(
-    //   offsetX,
-    //   offsetY
-    // );
-    // this.currentAnnotationState.onMouseDown(positionX, positionY);
-    // if (!(creatable || editable) || event.shiftKey) {
-    //   const { originX, originY } = this.scaleState;
-    //   this.startDrag = { x: offsetX, y: offsetY, originX, originY };
-    // };
+  public state = {
+    dragged: false,
+    offsetStartX: 0,
+    offsetStartY: 0,
+    offsetEndX: 0,
+    offsetEndY: 0,
   };
 
-  private onMouseMove: MouseEventHandler<HTMLCanvasElement> = (event) => {
-    // const { offsetX, offsetY } = event.nativeEvent;
-    // const { positionX, positionY } = this.calculateMousePosition(
-    //   offsetX,
-    //   offsetY
-    // );
-    // this.currentAnnotationState.onMouseMove(positionX, positionY);
-    // if (this.startDrag) {
-    //   this.scaleState.originX =
-    //     this.startDrag.originX + (offsetX - this.startDrag.x);
-    //   this.scaleState.originY =
-    //     this.startDrag.originY + (offsetY - this.startDrag.y);
-    //   this.setState({ imageScale: this.scaleState, hideArrowPreview: true });
-    //   requestAnimationFrame(() => {
-    //     this.onShapeChange();
-    //     this.onImageChange();
-    //   });
-    // }
+  private onMouseDown: MouseEventHandler<HTMLDivElement> = (event) => {
+    this.setState({
+      dragged: true,
+      offsetStartX: event.nativeEvent.x,
+      offsetStartY: event.nativeEvent.y,
+    });
   };
 
-  private onMouseUp: MouseEventHandler<HTMLCanvasElement> = () => {
-    // this.currentAnnotationState.onMouseUp();
-    // this.startDrag = undefined;
-    // this.setState({ hideArrowPreview: false });
+  private onMouseMove: MouseEventHandler<HTMLDivElement> = (event) => {
+    // TODO needs to be global - callback?
+    if (this.state.dragged) {
+      const offsetX = event.nativeEvent.x;
+      const offsetY = event.nativeEvent.y;
+      this.setState({
+        offsetEndX: offsetX,
+        offsetEndY: offsetY,
+      });
+    }
+  };
+
+  private onMouseUp: MouseEventHandler<HTMLDivElement> = (_event) => {
+    if (this.state.dragged) {
+      this.props.changeBoxPosition(
+        this.props.annotation,
+        this.state.offsetStartX - this.state.offsetEndX,
+        this.state.offsetStartY - this.state.offsetEndY
+      );
+      this.setState({ dragged: false });
+    }
   };
 
   render() {
@@ -91,18 +99,17 @@ export default class ArrowBox extends React.Component<ArrowBoxProps> {
               sourceAnchor: "bottom",
             },
           ]}
-          className="archerSource"
         >
           <SourcePoint
             arrowPosition={arrowPosition}
-            // onMouseDown={this.onMouseDown}
-            // onMouseMove={this.onMouseMove}
-            // onMouseUp={this.onMouseUp}
+            onMouseDown={this.onMouseDown}
+            onMouseMove={this.onMouseMove}
+            onMouseUp={this.onMouseUp}
           >
             {renderArrowWithBox(annotation)}
           </SourcePoint>
         </ArcherElement>
-        <ArcherElement id={`${annotation.id}-target`} className="archertarget">
+        <ArcherElement id={`${annotation.id}-target`}>
           <TargetPoint arrowPosition={arrowPosition}>
             <Dummy />
           </TargetPoint>
