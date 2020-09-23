@@ -98,6 +98,7 @@
     "pdf-lib": "^1.11.1",
     "pdfjs-dist": "2.4.456",
     "react-archer": "^2.0.2",
+    "react-draggable": "^4.4.3",
     "react-is": "^16.13.1",
     "reselect": "^4.0.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
