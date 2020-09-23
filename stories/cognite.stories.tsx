@@ -188,7 +188,7 @@ export const BoxAndArrows = () => {
     <CogniteFileViewer
       sdk={pdfSdk}
       file={pdfFile}
-      editable={true}
+      editable={boolean("Editable", false)}
       creatable={false}
       hideLabel={true}
       pagination={false}
