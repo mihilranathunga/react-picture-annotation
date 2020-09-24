@@ -341,10 +341,12 @@ export class ReactPictureAnnotation extends React.Component<
     } = this.state;
 
     const showArrowPreview = () =>
+      // @ts-ignore
       annotationData?.map((annotation: any) => {
         const position: any = arrowPreviewPositions[annotation.id];
         if (position) {
           return (
+            // @ts-ignore
             <StyledArrowBox
               annotation={annotation}
               position={position}
@@ -1106,6 +1108,7 @@ export class ReactPictureAnnotation extends React.Component<
   private onWheel = (event: WheelEvent) => {
     event.preventDefault();
     event.stopPropagation();
+    this.setState({ hideArrowPreview: true });
     // https://stackoverflow.com/a/31133823/9071503
     // const { clientHeight, scrollTop, scrollHeight,ctrlKey } = event;
     // if (clientHeight + scrollTop + event.deltaY > scrollHeight) {
@@ -1147,6 +1150,7 @@ export class ReactPictureAnnotation extends React.Component<
     requestAnimationFrame(() => {
       this.onShapeChange();
       this.onImageChange();
+      this.setState({ hideArrowPreview: false });
     });
   };
 
