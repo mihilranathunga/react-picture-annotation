@@ -1,38 +1,38 @@
-import React, { MouseEventHandler } from "react";
-import Draggable from "react-draggable";
+import React from "react";
 import styled from "styled-components";
 import { ArcherContainer, ArcherElement } from "react-archer";
 
-interface ArrowPosition {
-  arrowPosition: any;
+interface PointProps {
+  position: any;
 }
 interface ArrowBoxEvents {
-  onMouseDown: MouseEventHandler;
-  onMouseMove: MouseEventHandler;
-  onMouseUp: MouseEventHandler;
+  onDragStart: React.DragEvent;
+  onDrag: React.DragEvent;
+  onDragEnd: React.DragEvent;
 }
-interface ArrowBoxProps extends ArrowPosition, ArrowBoxEvents {
+interface ArrowBoxProps extends PointProps, ArrowBoxEvents {
   annotation: any;
   renderArrowWithBox: any;
-  changeBoxPosition: any;
+  updateBoxPosition: any;
 }
 
-const SourcePoint = styled.div.attrs((props: ArrowPosition) => ({
+const SourcePoint = styled.div.attrs((props: PointProps) => ({
   style: {
-    left: `${props.arrowPosition.x + props.arrowPosition.offsetX}px`,
-    top: `${props.arrowPosition.y - props.arrowPosition.offsetY}px`,
+    left: `${props.position.x}px`,
+    top: `${props.position.y}px`,
+    transform: `translate(${props.position.offsetX}px, ${props.position.offsetY}px)`,
   },
-}))<ArrowPosition>`
+}))<PointProps>`
   position: absolute;
   pointer-events: auto;
   cursor: grab;
 `;
-const TargetPoint = styled.div.attrs((props: ArrowPosition) => ({
+const TargetPoint = styled.div.attrs((props: PointProps) => ({
   style: {
-    left: `${props.arrowPosition.x}px`,
-    top: `${props.arrowPosition.y}px`,
+    left: `${props.position.x}px`,
+    top: `${props.position.y}px`,
   },
-}))<ArrowPosition>`
+}))<PointProps>`
   position: absolute;
 `;
 // TODO this might need to be changed
@@ -51,45 +51,56 @@ const StyledArcherContainer = styled(ArcherContainer)`
 export default class ArrowBox extends React.Component<ArrowBoxProps> {
   public state = {
     dragged: false,
-    offsetStartX: 0,
-    offsetStartY: 0,
-    offsetEndX: 0,
-    offsetEndY: 0,
+    x: this.props.position.x,
+    y: this.props.position.y,
+    baseOffsetX: -20,
+    baseOffsetY: -40,
+    offsetX: this.props.position.offsetX ?? 0,
+    offsetY: this.props.position.offsetY ?? 0,
   };
 
-  private handleStart: MouseEventHandler<HTMLDivElement> = (event) => {
-    this.setState({
-      dragged: true,
-      offsetStartX: event.nativeEvent.x,
-      offsetStartY: event.nativeEvent.y,
-    });
+  private onDragStart = (event: React.DragEvent<HTMLDivElement>): void => {
+    const img = new Image();
+    // this makes image ghost invisible
+    event.dataTransfer.setDragImage(img, 0, 0);
+    this.setState({ dragged: true });
   };
 
-  private handleDrag: MouseEventHandler<HTMLDivElement> = (event) => {
+  private onDrag = (event: React.DragEvent<HTMLDivElement>): void => {
     if (this.state.dragged) {
-      const offsetX = event.x;
-      const offsetY = event.y;
       this.setState({
-        offsetEndX: offsetX,
-        offsetEndY: offsetY,
+        offsetX: event.nativeEvent.x - this.state.x,
+        offsetY: event.nativeEvent.y - this.state.y,
       });
     }
   };
 
-  private handleStop: MouseEventHandler<HTMLDivElement> = (_event) => {
+  private onDragEnd = (event: React.DragEvent<HTMLDivElement>): void => {
+    this.archerContainerRef?.current?.refreshScreen();
     if (this.state.dragged) {
-      this.props.changeBoxPosition(
-        this.props.annotation,
-        this.state.offsetStartX - this.state.offsetEndX,
-        this.state.offsetStartY - this.state.offsetEndY
-      );
-      this.setState({ dragged: false });
+      const offsetX = event.nativeEvent.x - this.state.x;
+      const offsetY = event.nativeEvent.y - this.state.y;
+      this.setState({
+        dragged: false,
+        offsetX,
+        offsetY,
+      });
+      this.props.updateBoxPosition(this.props.annotation.id, offsetX, offsetY);
     }
   };
+
+  private archerContainerRef: React.RefObject<
+    ArcherContainer
+  > = React.createRef();
+
   render() {
-    const { annotation, arrowPosition, renderArrowWithBox } = this.props;
+    const { position, renderArrowWithBox, annotation } = this.props;
     return (
-      <StyledArcherContainer strokeColor="orange" strokeWidth={1}>
+      <StyledArcherContainer
+        strokeColor="orange"
+        strokeWidth={1}
+        ref={this.archerContainerRef}
+      >
         <ArcherElement
           id={`${annotation.id}-source`}
           relations={[
@@ -100,23 +111,23 @@ export default class ArrowBox extends React.Component<ArrowBoxProps> {
             },
           ]}
         >
-          <div>
-            <Draggable
-            // onStart={this.handleStart}
-            // onDrag={this.handleDrag}
-            // onStop={this.handleStop}
-            >
-              <SourcePoint
-                className="draggablebox"
-                arrowPosition={arrowPosition}
-              >
-                {renderArrowWithBox(annotation)}
-              </SourcePoint>
-            </Draggable>
-          </div>
+          <SourcePoint
+            draggable={true}
+            position={{
+              x: this.state.x,
+              y: this.state.y,
+              offsetX: this.state.offsetX + this.state.baseOffsetX,
+              offsetY: this.state.offsetY + this.state.baseOffsetY,
+            }}
+            onDragStart={this.onDragStart}
+            onDrag={this.onDrag}
+            onDragEnd={this.onDragEnd}
+          >
+            {renderArrowWithBox(annotation)}
+          </SourcePoint>
         </ArcherElement>
         <ArcherElement id={`${annotation.id}-target`}>
-          <TargetPoint arrowPosition={arrowPosition}>
+          <TargetPoint position={position}>
             <Dummy />
           </TargetPoint>
         </ArcherElement>

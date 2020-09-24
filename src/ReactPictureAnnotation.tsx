@@ -112,7 +112,7 @@ export class ReactPictureAnnotation extends React.Component<
     arrowPreviewPositions: {}, // TODO types
     annotationsLoaded: false,
     showInput: false,
-    hideArrowPreview: false,
+    hideArrowPreview: true,
   };
   private currentAnnotationData: IAnnotation[] = [];
   private selectedIdTrueValue: string | null = null;
@@ -246,7 +246,7 @@ export class ReactPictureAnnotation extends React.Component<
   };
 
   public calculateShapePositionNoOffset = (
-    shapeData: IShapeBase
+    shapeData: IShapeBase // TODO rename that
   ): IShapeBase => {
     const { x, y, width, height } = shapeData;
     let scaledX = x;
@@ -292,8 +292,6 @@ export class ReactPictureAnnotation extends React.Component<
       newArrowPreviewPositions[this.props.annotationData[annotation].id] = {
         x: 0,
         y: 0,
-        offsetX: -20,
-        offsetY: 50,
       };
     }
     this.setState({
@@ -303,19 +301,22 @@ export class ReactPictureAnnotation extends React.Component<
     this.onShapeChange();
   };
 
-  public changeBoxPosition = (annotation: any, offsetX: any, offsetY: any) => {
-    const previousPosition = this.state.arrowPreviewPositions[annotation.id];
-    const newPositions = {
-      ...this.state.arrowPreviewPositions,
-      [annotation.id]: {
-        ...previousPosition,
-        offsetX: previousPosition.offsetX - offsetX,
-        offsetY: previousPosition.offsetY + offsetY,
-      },
-    };
-    this.setState({
-      arrowPreviewPositions: newPositions,
-    });
+  public updateBoxPosition = (id: number, offsetX: number, offsetY: number) => {
+    if (this.props.renderArrowPreview) {
+      this.setState(
+        {
+          arrowPreviewPositions: {
+            ...this.state.arrowPreviewPositions,
+            [id]: {
+              ...this.state.arrowPreviewPositions[id],
+              offsetX,
+              offsetY,
+            },
+          },
+        },
+        () => this.onShapeChange()
+      );
+    }
   };
 
   public render() {
@@ -341,14 +342,14 @@ export class ReactPictureAnnotation extends React.Component<
 
     const showArrowPreview = () =>
       annotationData?.map((annotation: any) => {
-        const arrowPosition: any = arrowPreviewPositions[annotation.id];
-        if (arrowPosition) {
+        const position: any = arrowPreviewPositions[annotation.id];
+        if (position) {
           return (
             <StyledArrowBox
               annotation={annotation}
-              arrowPosition={arrowPosition}
+              position={position}
               renderArrowWithBox={renderArrowPreview}
-              changeBoxPosition={this.changeBoxPosition}
+              updateBoxPosition={this.updateBoxPosition}
             />
           );
         }
@@ -434,12 +435,11 @@ export class ReactPictureAnnotation extends React.Component<
         );
 
         if (this.props.renderArrowPreview) {
-          const oldArrowPreview = this.state.arrowPreviewPositions[itemId];
           this.setState({
             arrowPreviewPositions: {
               ...this.state.arrowPreviewPositions,
               [itemId]: {
-                ...oldArrowPreview,
+                ...this.state.arrowPreviewPositions[itemId],
                 x,
                 y,
               },
@@ -528,11 +528,12 @@ export class ReactPictureAnnotation extends React.Component<
       );
     }
 
-    this.setState({ imageScale: this.scaleState });
+    this.setState({ imageScale: this.scaleState, hideArrowPreview: true });
 
     requestAnimationFrame(() => {
       this.onShapeChange();
       this.onImageChange();
+      this.setState({ hideArrowPreview: false });
     });
   };
 
@@ -549,11 +550,12 @@ export class ReactPictureAnnotation extends React.Component<
       );
     }
 
-    this.setState({ imageScale: this.scaleState });
+    this.setState({ imageScale: this.scaleState, hideArrowPreview: true });
 
     requestAnimationFrame(() => {
       this.onShapeChange();
       this.onImageChange();
+      this.setState({ hideArrowPreview: false });
     });
   };
 
@@ -563,6 +565,7 @@ export class ReactPictureAnnotation extends React.Component<
       this.currentImageElement || document.createElement("img");
     nextImageNode.crossOrigin = "anonymous";
     const loadProperDimentions = () => {
+      this.setState({ hideArrowPreview: true });
       const { width, height } = nextImageNode;
       const imageNodeRatio = height / width;
       const { width: canvasWidth, height: canvasHeight } = this.props;
@@ -586,6 +589,7 @@ export class ReactPictureAnnotation extends React.Component<
       }
       this.onImageChange();
       this.onShapeChange();
+      this.setState({ hideArrowPreview: false });
     };
     if (this.currentImageElement) {
       loadProperDimentions();

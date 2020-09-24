@@ -50,8 +50,7 @@ export const pdfSdk = ({
     retrieve: async () => [pdfFile],
     getDownloadUrls: async () => [
       {
-        downloadUrl:
-          "https://cors-anywhere.herokuapp.com/https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+        downloadUrl: "pnid.pdf",
       },
     ],
   },
