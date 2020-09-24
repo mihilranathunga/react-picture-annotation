@@ -167,10 +167,10 @@ export const SplitContextAndViewer = () => {
   );
 };
 
-const Preview = styled.div`
+const PreviewBox = styled.div`
   padding: 5px;
-  border: 1px solid orange;
-  border-top: 5px solid orange;
+  border: 1px solid ${(props) => props.color ?? "orange"};
+  border-top: 5px solid ${(props) => props.color ?? "orange"};
   box-sizing: border-box;
   background-color: rgba(255, 255, 255, 0.85);
   user-select: none;
@@ -178,23 +178,80 @@ const Preview = styled.div`
   line-height: 0.8em;
 `;
 
-const PreviewBox = (props: any) => {
-  const { children } = props;
-  return <Preview>{children}</Preview>;
-};
+const BoxWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+
+  & > * {
+    margin-right: 2px;
+  }
+`;
 
 export const BoxAndArrows = () => {
+  const [annotations, setAnnotations] = useState<CogniteAnnotation[]>([]);
+  useEffect(() => {
+    (async () => {
+      setAnnotations(await listAnnotationsForFile(pdfSdk, pdfFile));
+    })();
+  }, []);
+
+  const callbacks: ViewerEditCallbacks = useMemo(
+    () => ({
+      onCreate: (annotation) => {
+        id += 1;
+        setAnnotations(
+          annotations.concat([
+            {
+              ...annotation,
+              id,
+              createdTime: new Date(),
+              lastUpdatedTime: new Date(),
+            } as CogniteAnnotation,
+          ])
+        );
+        return false;
+      },
+      onUpdate: (annotation) => {
+        setAnnotations(
+          annotations
+            .filter((el) => `${el.id}` !== `${annotation.id}`)
+            .concat([annotation as CogniteAnnotation])
+        );
+        return false;
+      },
+    }),
+    [annotations, setAnnotations]
+  );
+
   return (
     <CogniteFileViewer
       sdk={pdfSdk}
       file={pdfFile}
-      editable={boolean("Editable", false)}
+      editable={boolean("Editable", true)}
       creatable={false}
       hideLabel={true}
       pagination={false}
+      editCallbacks={callbacks}
+      disableAutoFetch={true}
+      annotations={annotations}
       onAnnotationSelected={action("onAnnotationSelected")}
-      renderArrowPreview={(annotation: any) => (
-        <PreviewBox>{annotation.id.substring(0, 2)}</PreviewBox>
+      renderArrowPreview={(_annotation: any) => (
+        <BoxWrapper>
+          <PreviewBox>13</PreviewBox>
+          <PreviewBox color="cyan">22</PreviewBox>
+        </BoxWrapper>
+      )}
+      renderItemPreview={(anno) => (
+        <>
+          <Button
+            icon="Delete"
+            onClick={() =>
+              setAnnotations(
+                annotations.filter((el) => `${el.id}` !== `${anno.id}`)
+              )
+            }
+          />
+        </>
       )}
     />
   );
