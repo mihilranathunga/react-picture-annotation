@@ -9,6 +9,7 @@ import { DefaultInputSection } from "./DefaultInputSection";
 import { IShape, IShapeBase, RectShape } from "./Shape";
 import Transformer, { ITransformer } from "./Transformer";
 import styled from "styled-components";
+import { PDFPageProxy, PDFDocumentProxy } from "pdfjs-dist/types/display/api";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@2.6.347/build/pdf.worker.min.js`;
 
@@ -128,7 +129,7 @@ export class ReactPictureAnnotation extends React.Component<
   } = undefined;
   private lastPinchLength?: number;
 
-  private _PDF_DOC?: pdfjs.PDFDocumentProxy;
+  private _PDF_DOC?: PDFDocumentProxy;
 
   public componentDidMount = async () => {
     const currentCanvas = this.canvasRef.current;
@@ -839,7 +840,7 @@ export class ReactPictureAnnotation extends React.Component<
     }
   };
 
-  private createContext = (page: pdfjs.PDFPageProxy) => {
+  private createContext = (page: PDFPageProxy) => {
     const viewport = page.getViewport({
       scale: Math.min(
         Math.max(

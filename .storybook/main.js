@@ -1,7 +1,11 @@
 const path = require('path');
 
 module.exports = {
-  stories: ['../stories/*.stories.tsx', '../stories/*.stories.mdx'],
+  stories: [
+    '../stories/cognite.stories.mdx',
+    '../stories/*.stories.mdx',
+    '../stories/*.stories.tsx',
+  ],
   typescript: {
     check: false,
     checkOptions: {},
