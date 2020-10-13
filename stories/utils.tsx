@@ -1,16 +1,16 @@
-import styled from 'styled-components';
-import { CogniteClient } from 'cognite-sdk-v3';
-import { response, orcResults } from './resources';
-import { FileViewerContextObserverPublicProps } from '../src';
-import randomId from '../src/utils/randomId';
+import styled from "styled-components";
+import { CogniteClient } from "@cognite/sdk";
+import { response, orcResults } from "./resources";
+import { FileViewerContextObserverPublicProps } from "../src";
+import randomId from "../src/utils/randomId";
 
 export const pdfFile = {
   id: 1,
   lastUpdatedTime: new Date(),
   uploaded: false,
   createdTime: new Date(),
-  name: 'Random File',
-  mimeType: 'application/pdf',
+  name: "Random File",
+  mimeType: "application/pdf",
 };
 
 export const imgFile = {
@@ -18,8 +18,8 @@ export const imgFile = {
   lastUpdatedTime: new Date(),
   uploaded: false,
   createdTime: new Date(),
-  name: 'Random File',
-  mimeType: 'image/png',
+  name: "Random File",
+  mimeType: "image/png",
 };
 
 export const imgSdk = ({
@@ -33,7 +33,7 @@ export const imgSdk = ({
   post: async () => ({ data: { items: [{ annotations: orcResults }] } }),
   files: {
     retrieve: async () => [imgFile],
-    getDownloadUrls: async () => [{ downloadUrl: '//unsplash.it/800/400' }],
+    getDownloadUrls: async () => [{ downloadUrl: "//unsplash.it/800/400" }],
   },
 } as unknown) as CogniteClient;
 
@@ -51,7 +51,7 @@ export const pdfSdk = ({
     getDownloadUrls: async () => [
       {
         downloadUrl:
-          'https://cors-anywhere.herokuapp.com/http://www.africau.edu/images/default/sample.pdf',
+          "https://cors-anywhere.herokuapp.com/http://www.africau.edu/images/default/sample.pdf",
       },
     ],
   },

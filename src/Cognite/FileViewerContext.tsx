@@ -1,16 +1,15 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { CogniteClient as CogniteClientV2 } from 'cognite-sdk-v2';
-import { CogniteClient as CogniteClientV3, FileInfo } from 'cognite-sdk-v3';
+import React, { useContext, useState, useEffect } from "react";
+import { CogniteClient, FileInfo } from "@cognite/sdk";
 import {
   CogniteAnnotation,
   listAnnotationsForFile,
-} from '@cognite/annotations';
-import { ProposedCogniteAnnotation } from './FileViewerUtils';
+} from "@cognite/annotations";
+import { ProposedCogniteAnnotation } from "./FileViewerUtils";
 import {
   DownloadFileFunction,
   ExtractFromCanvasFunction,
   ViewerZoomFunction,
-} from '../ReactPictureAnnotation';
+} from "../ReactPictureAnnotation";
 
 export type FileViewerContextObserver = FileViewerContextObserverPublicProps &
   FileViewerContextObserverPrivateProps;
@@ -18,7 +17,7 @@ export type FileViewerContextObserverPublicProps = {
   /**
    * The sdk that was provided via provider
    */
-  sdk: CogniteClientV2 | CogniteClientV3;
+  sdk: CogniteClient;
   /**
    * The current page, available via `usePage()`
    */
@@ -154,7 +153,7 @@ export type ContextProps = {
   /**
    * A CogniteClient to supply to the viewer
    */
-  sdk: CogniteClientV2 | CogniteClientV3;
+  sdk: CogniteClient;
   /**
    * Should fetching of annotations happen automatically? Unless you want to hook annotations fetching/storing into your store or augment annotations from CDF before sending into viewer, and you can trust the viewer to fetch annotations each time a file is supplied.
    */
@@ -179,7 +178,7 @@ const FileViewerProvider = ({
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [file, setFile] = useState<FileInfo | undefined>(undefined);
-  const [query, setQuery] = useState<string>('');
+  const [query, setQuery] = useState<string>("");
 
   const [download, setDownload] = useState<DownloadFileFunction | undefined>(
     undefined
