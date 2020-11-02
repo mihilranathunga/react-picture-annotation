@@ -211,20 +211,21 @@ export const FileViewer = ({
               .split(",")
               .some((el) => box.text.toLowerCase().includes(el))
         )
-        .map((el) => {
-          return {
-            id: JSON.stringify(el.boundingBox),
-            mark: {
-              x: el.boundingBox.xMin,
-              y: el.boundingBox.yMin,
-              width: el.boundingBox.xMax - el.boundingBox.xMin,
-              height: el.boundingBox.yMax - el.boundingBox.yMin,
-              backgroundColor: `${Colors["midblue-4"].hex()}88`,
-              strokeWidth: 2,
-            },
-            disableClick: true,
-          } as IAnnotation<IRectShapeData>;
-        }),
+        .map(
+          (el) =>
+            ({
+              id: JSON.stringify(el.boundingBox),
+              mark: {
+                x: el.boundingBox.xMin,
+                y: el.boundingBox.yMin,
+                width: el.boundingBox.xMax - el.boundingBox.xMin,
+                height: el.boundingBox.yMax - el.boundingBox.yMin,
+                backgroundColor: `${Colors["midblue-4"].hex()}88`,
+                strokeWidth: 2,
+              },
+              disableClick: true,
+            } as IAnnotation<IRectShapeData>)
+        ),
     [textboxes, query]
   );
 
