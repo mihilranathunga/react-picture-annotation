@@ -36,6 +36,10 @@ export type ViewerEditCallbacks = {
 
 export type ViewerProps = {
   /**
+   * Custom annotation colors/shapes will be ignored if set to false
+   */
+  allowCustomAnnotations?: boolean;
+  /**
    * File will tell the viewer what file to show.
    */
   file?: FileInfo;
@@ -64,7 +68,8 @@ export type ViewerProps = {
    */
   renderAnnotation?: (
     el: CogniteAnnotation | ProposedCogniteAnnotation,
-    isSelected: boolean
+    isSelected: boolean,
+    allowCustomAnnotations: boolean
   ) => IAnnotation<IRectShapeData>;
   /**
    * Override how an annotation box is drawn on top of the file
@@ -103,6 +108,7 @@ export type ViewerProps = {
 };
 
 export const FileViewer = ({
+  allowCustomAnnotations,
   file: fileFromProps,
   hideLabel = true,
   hoverable = false,
@@ -169,7 +175,8 @@ export const FileViewer = ({
       annotations.map((el) =>
         renderAnnotation(
           el,
-          selectedAnnotation ? isSameResource(el, selectedAnnotation) : false
+          selectedAnnotation ? isSameResource(el, selectedAnnotation) : false,
+          !!allowCustomAnnotations
         )
       ),
     [annotations, selectedAnnotation]
@@ -204,21 +211,20 @@ export const FileViewer = ({
               .split(",")
               .some((el) => box.text.toLowerCase().includes(el))
         )
-        .map(
-          (el) =>
-            ({
-              id: JSON.stringify(el.boundingBox),
-              mark: {
-                x: el.boundingBox.xMin,
-                y: el.boundingBox.yMin,
-                width: el.boundingBox.xMax - el.boundingBox.xMin,
-                height: el.boundingBox.yMax - el.boundingBox.yMin,
-                backgroundColor: `${Colors["midblue-4"].hex()}88`,
-                strokeWidth: 0,
-              },
-              disableClick: true,
-            } as IAnnotation<IRectShapeData>)
-        ),
+        .map((el) => {
+          return {
+            id: JSON.stringify(el.boundingBox),
+            mark: {
+              x: el.boundingBox.xMin,
+              y: el.boundingBox.yMin,
+              width: el.boundingBox.xMax - el.boundingBox.xMin,
+              height: el.boundingBox.yMax - el.boundingBox.yMin,
+              backgroundColor: `${Colors["midblue-4"].hex()}88`,
+              strokeWidth: 0,
+            },
+            disableClick: true,
+          } as IAnnotation<IRectShapeData>;
+        }),
     [textboxes, query]
   );
 
