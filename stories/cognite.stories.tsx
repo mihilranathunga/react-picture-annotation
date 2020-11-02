@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { action } from "@storybook/addon-actions";
-import { boolean, select, number } from "@storybook/addon-knobs";
+import { boolean, select } from "@storybook/addon-knobs";
 import { CogniteFileViewer, ViewerEditCallbacks } from "../src";
 import {
   imgSdk,
@@ -181,7 +181,7 @@ export const CustomizedAnnotations = () => {
     {
       backgroundColor: "#ff110055",
       strokeColor: "#26ff0055",
-      strokeWidth: number("Stroke width", 0),
+      strokeWidth: 0,
     },
     {
       draw: (
@@ -192,6 +192,7 @@ export const CustomizedAnnotations = () => {
         height: number
       ) => {
         canvas.beginPath();
+        canvas.globalCompositeOperation = "multiply";
         canvas.fillStyle = "#26ff0055";
         canvas.arc(
           x + width / 2,
@@ -219,7 +220,7 @@ export const CustomizedAnnotations = () => {
       );
       setAnnotations(customizedAnnotations);
     })();
-  }, []);
+  }, [mark]);
 
   return (
     <CogniteFileViewer

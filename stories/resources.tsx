@@ -5,7 +5,7 @@ export const twoAnnotationsResponse = [
     description: "This is a customizable annotation!",
     metadata: {
       CDF_ANNOTATION_box:
-        '{"xMin":0.28109384469584436,"yMin":0.15310077519379847,"xMax":0.3489239209872729,"yMax":0.22868217054263568}',
+        '{"xMin":0.28109384469584436,"yMin":0.15310077519379847,"xMax":0.5489239209872729,"yMax":0.32868217054263568}',
       CDF_ANNOTATION_file_external_id: "dummy.pdf",
       CDF_ANNOTATION_resource_external_id: "dummyfile",
       CDF_ANNOTATION_resource_id: "1233",

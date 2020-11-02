@@ -36,7 +36,7 @@ export type ViewerEditCallbacks = {
 
 export type ViewerProps = {
   /**
-   * Custom annotation colors/shapes will be ignored if set to false
+   * If true, you can customize the color and shape of annotation boxes.
    */
   allowCustomAnnotations?: boolean;
   /**
@@ -108,7 +108,7 @@ export type ViewerProps = {
 };
 
 export const FileViewer = ({
-  allowCustomAnnotations,
+  allowCustomAnnotations = false,
   file: fileFromProps,
   hideLabel = true,
   hoverable = false,
@@ -220,7 +220,7 @@ export const FileViewer = ({
               width: el.boundingBox.xMax - el.boundingBox.xMin,
               height: el.boundingBox.yMax - el.boundingBox.yMin,
               backgroundColor: `${Colors["midblue-4"].hex()}88`,
-              strokeWidth: 0,
+              strokeWidth: 2,
             },
             disableClick: true,
           } as IAnnotation<IRectShapeData>;

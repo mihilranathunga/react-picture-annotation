@@ -105,10 +105,12 @@ export const convertCogniteAnnotationToIAnnotation = (
   if (allowCustomAnnotations) {
     if (el?.mark?.backgroundColor)
       annotation.mark.backgroundColor = el.mark.backgroundColor;
-    if (el?.mark?.strokeColor)
+    if (el?.mark?.strokeColor) {
       annotation.mark.strokeColor = el.mark.strokeColor;
-    if (el?.mark?.strokeWidth)
+    }
+    if (el?.mark?.strokeWidth !== undefined) {
       annotation.mark.strokeWidth = el.mark.strokeWidth;
+    }
     if (el?.mark?.draw) annotation.mark.draw = el.mark.draw;
   }
   return annotation as IAnnotation<IRectShapeData>;
