@@ -56,6 +56,10 @@ export type ViewerProps = {
    */
   hoverable?: boolean;
   /**
+   * Used when an annotation needs to be selected on start
+   */
+  selectedId?: string | null;
+  /**
    * Used when `disableAutoFetch` is true to supply `annotations` to display
    */
   annotations?: (CogniteAnnotation | ProposedCogniteAnnotation)[];
@@ -119,6 +123,7 @@ export const FileViewer = ({
   renderItemPreview = () => <></>,
   creatable,
   editable,
+  selectedId,
   pagination = "normal",
   hideControls = false,
   loader,
@@ -157,12 +162,6 @@ export const FileViewer = ({
       setAnnotations(annotationsFromProps);
     }
   }, [annotationsFromProps, setAnnotations]);
-
-  useEffect(() => {
-    if (onAnnotationSelected) {
-      onAnnotationSelected(selectedAnnotation);
-    }
-  }, [selectedAnnotation, onAnnotationSelected]);
 
   useEffect(() => {
     if (fileFromProps) {
@@ -294,6 +293,10 @@ export const FileViewer = ({
     const annotation = annotations.find((el) => `${el.id}` === `${id}`);
     if (annotation) {
       setSelectedAnnotation(annotation);
+
+      if (onAnnotationSelected && id !== selectedId) {
+        onAnnotationSelected(annotation);
+      }
     }
   };
 
@@ -399,6 +402,7 @@ export const FileViewer = ({
       )}
       <ReactPictureAnnotation
         ref={annotatorRef}
+        selectedId={selectedId}
         drawLabel={!hideLabel}
         hoverable={hoverable}
         editable={editable}
