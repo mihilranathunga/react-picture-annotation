@@ -96,6 +96,17 @@ export const AllowControlledEditing = () => {
     }),
     [annotations, setAnnotations]
   );
+
+  const [selectedId, setSelectedId] = useState<string | null>(
+    "406167784064508"
+  );
+
+  const handleAnnotationSelection = (annotation: CogniteAnnotation) => {
+    if (annotation) {
+      setSelectedId(`${annotation.id}`);
+    }
+  };
+
   return (
     <CogniteFileViewer
       sdk={imgSdk}
@@ -104,6 +115,8 @@ export const AllowControlledEditing = () => {
       annotations={annotations}
       editable={true}
       editCallbacks={callbacks}
+      selectedId={selectedId}
+      onAnnotationSelected={handleAnnotationSelection}
       renderItemPreview={(anno) => (
         <>
           <span>{anno.comment}</span>
