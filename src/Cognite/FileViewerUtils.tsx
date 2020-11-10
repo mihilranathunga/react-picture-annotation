@@ -15,7 +15,7 @@ export type CustomizableCogniteAnnotation = (
   | CogniteAnnotation
   | ProposedCogniteAnnotation
 ) & {
-  mark: {
+  mark?: {
     backgroundColor?: string;
     strokeColor?: string;
     strokeWidth?: number;
