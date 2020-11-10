@@ -11,7 +11,7 @@ import Transformer, { ITransformer } from "./Transformer";
 import styled from "styled-components";
 import { PDFPageProxy, PDFDocumentProxy } from "pdfjs-dist/types/display/api";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//dev.fusion.cogniteapp.com/dependencies/pdfjs-dist@2.6.347/build/pdf.worker.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js`;
 
 export type RenderItemPreviewFunction = (
   annotation: IAnnotation,
