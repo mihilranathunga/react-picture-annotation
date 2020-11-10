@@ -11,21 +11,23 @@ export interface ProposedCogniteAnnotation extends PendingCogniteAnnotation {
   id: string;
 }
 
-export type CustomizableCogniteAnnotation = CogniteAnnotation &
-  ProposedCogniteAnnotation & {
-    mark: {
-      backgroundColor?: string;
-      strokeColor?: string;
-      strokeWidth?: number;
-      draw?: (
-        canvas: CanvasRenderingContext2D,
-        x: number,
-        y: number,
-        width: number,
-        height: number
-      ) => void;
-    };
+export type CustomizableCogniteAnnotation = (
+  | CogniteAnnotation
+  | ProposedCogniteAnnotation
+) & {
+  mark: {
+    backgroundColor?: string;
+    strokeColor?: string;
+    strokeWidth?: number;
+    draw?: (
+      canvas: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      width: number,
+      height: number
+    ) => void;
   };
+};
 
 /**
  * If there is no allowCustomAnnotations flag, those are the colors of the annotations.
