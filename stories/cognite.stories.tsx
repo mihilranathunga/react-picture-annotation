@@ -319,12 +319,17 @@ export const BoxAndArrows = () => {
       disableAutoFetch={true}
       annotations={annotations}
       onAnnotationSelected={action("onAnnotationSelected")}
-      renderArrowPreview={(_annotation: any) => (
-        <BoxWrapper>
-          <PreviewBox>13</PreviewBox>
-          <PreviewBox color="cyan">22</PreviewBox>
-        </BoxWrapper>
-      )}
+      renderArrowPreview={(annotation: any) => {
+        if (annotation.id === "1111") {
+          return (
+            <BoxWrapper>
+              <PreviewBox>13</PreviewBox>
+              <PreviewBox color="cyan">22</PreviewBox>
+            </BoxWrapper>
+          );
+        }
+        return undefined;
+      }}
       renderItemPreview={(anno) => (
         <>
           <Button

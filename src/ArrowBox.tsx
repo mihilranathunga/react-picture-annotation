@@ -12,7 +12,7 @@ interface ArrowBoxEvents {
 }
 interface ArrowBoxProps extends PointProps, ArrowBoxEvents {
   annotation: any;
-  renderArrowWithBox: any;
+  renderedArrowWithBox: any;
   updateBoxPosition: any;
 }
 
@@ -94,7 +94,7 @@ export default class ArrowBox extends React.Component<ArrowBoxProps> {
   > = React.createRef();
 
   render() {
-    const { position, renderArrowWithBox, annotation } = this.props;
+    const { position, renderedArrowWithBox, annotation } = this.props;
     return (
       <StyledArcherContainer
         strokeColor="orange"
@@ -123,7 +123,7 @@ export default class ArrowBox extends React.Component<ArrowBoxProps> {
             onDrag={this.onDrag}
             onDragEnd={this.onDragEnd}
           >
-            {renderArrowWithBox(annotation)}
+            {renderedArrowWithBox}
           </SourcePoint>
         </ArcherElement>
         <ArcherElement id={`${annotation.id}-target`}>

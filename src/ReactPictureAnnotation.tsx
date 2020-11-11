@@ -19,7 +19,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://cdf-hub-bundles.cogniteapp.com/de
 export type RenderItemPreviewFunction = (
   annotation: IAnnotation,
   height: React.CSSProperties["maxHeight"]
-) => React.ReactElement;
+) => React.ReactElement | undefined;
 
 export type DownloadFileFunction = (
   fileName: string,
@@ -347,13 +347,15 @@ export class ReactPictureAnnotation extends React.Component<
       // @ts-ignore
       annotationData?.map((annotation: any) => {
         const position: any = arrowPreviewPositions[annotation.id];
-        if (position) {
+        const arrowBox = renderArrowPreview(annotation);
+        if (position && arrowBox) {
           return (
             // @ts-ignore
             <StyledArrowBox
+              key={`arrow-box-${annotation.id}`}
               annotation={annotation}
               position={position}
-              renderArrowWithBox={renderArrowPreview}
+              renderedArrowWithBox={arrowBox}
               updateBoxPosition={this.updateBoxPosition}
             />
           );
