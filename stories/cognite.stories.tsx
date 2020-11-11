@@ -23,6 +23,7 @@ import {
   useDownloadPDF,
   useZoomControls,
 } from "../src/Cognite/FileViewerContext";
+import styled from "styled-components"; // TODO move into separate file
 
 export const AllowCustomization = () => {
   const [annotations, setAnnotations] = useState<CogniteAnnotation[]>([]);
@@ -247,6 +248,95 @@ export const CustomizedAnnotations = () => {
   );
 };
 
+const PreviewBox = styled.div`
+  padding: 5px;
+  border: 1px solid ${(props) => props.color ?? "orange"};
+  border-top: 5px solid ${(props) => props.color ?? "orange"};
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.85);
+  user-select: none;
+  font-size: 0.8em;
+  line-height: 0.8em;
+`;
+
+const BoxWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+
+  & > * {
+    margin-right: 2px;
+  }
+`;
+
+export const BoxAndArrows = () => {
+  const [annotations, setAnnotations] = useState<CogniteAnnotation[]>([]);
+  useEffect(() => {
+    (async () => {
+      setAnnotations(await listAnnotationsForFile(pdfSdk, pdfFile));
+    })();
+  }, []);
+
+  const callbacks: ViewerEditCallbacks = useMemo(
+    () => ({
+      onCreate: (annotation) => {
+        id += 1;
+        setAnnotations(
+          annotations.concat([
+            {
+              ...annotation,
+              id,
+              createdTime: new Date(),
+              lastUpdatedTime: new Date(),
+            } as CogniteAnnotation,
+          ])
+        );
+        return false;
+      },
+      onUpdate: (annotation) => {
+        setAnnotations(
+          annotations
+            .filter((el) => `${el.id}` !== `${annotation.id}`)
+            .concat([annotation as CogniteAnnotation])
+        );
+        return false;
+      },
+    }),
+    [annotations, setAnnotations]
+  );
+
+  return (
+    <CogniteFileViewer
+      sdk={pdfSdk}
+      file={pdfFile}
+      editable={boolean("Editable", true)}
+      creatable={false}
+      hideLabel={true}
+      pagination={false}
+      editCallbacks={callbacks}
+      disableAutoFetch={true}
+      annotations={annotations}
+      onAnnotationSelected={action("onAnnotationSelected")}
+      renderArrowPreview={(_annotation: any) => (
+        <BoxWrapper>
+          <PreviewBox>13</PreviewBox>
+          <PreviewBox color="cyan">22</PreviewBox>
+        </BoxWrapper>
+      )}
+      renderItemPreview={(anno) => (
+        <>
+          <Button
+            icon="Delete"
+            onClick={() =>
+              setAnnotations(
+                annotations.filter((el) => `${el.id}` !== `${anno.id}`)
+              )
+            }
+          />
+        </>
+      )}
+    />
+  );
+};
 export const Playground = () => {
   return (
     <CogniteFileViewer
