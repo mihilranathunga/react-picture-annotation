@@ -112,7 +112,7 @@ export default class ArrowBox extends React.Component<ArrowBoxProps> {
           ]}
         >
           <SourcePoint
-            draggable={true}
+            draggable={false} // TODO temporarily disabled
             position={{
               x: this.state.x,
               y: this.state.y,
