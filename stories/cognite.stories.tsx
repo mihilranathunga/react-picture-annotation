@@ -272,10 +272,13 @@ export const BoxAndArrows = () => {
   const [annotations, setAnnotations] = useState<CogniteAnnotation[]>([]);
   useEffect(() => {
     (async () => {
-      setAnnotations(await listAnnotationsForFile(pdfSdk, pdfFile));
+      const rawAnnotations = await listAnnotationsForFile(
+        imgSdkTwoAnnotations,
+        imgFile
+      );
+      setAnnotations(rawAnnotations);
     })();
   }, []);
-
   const callbacks: ViewerEditCallbacks = useMemo(
     () => ({
       onCreate: (annotation) => {
@@ -306,8 +309,8 @@ export const BoxAndArrows = () => {
 
   return (
     <CogniteFileViewer
-      sdk={pdfSdk}
-      file={pdfFile}
+      sdk={imgSdk}
+      file={imgFile}
       editable={boolean("Editable", true)}
       creatable={false}
       hideLabel={true}
