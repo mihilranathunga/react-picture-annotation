@@ -65,6 +65,10 @@ export type FileViewerContextObserverPublicProps = {
    */
   setQuery: React.Dispatch<React.SetStateAction<string>>;
   /**
+   * Is the file loading, available via `useIsFileLoading()`
+   */
+  isLoading: boolean;
+  /**
    * zoomIn() will zoom the viewer in, available via `useZoomControls()`
    */
   zoomIn: ViewerZoomFunction | undefined;
@@ -104,6 +108,7 @@ type FileViewerContextObserverPrivateProps = {
   >;
   setFile: (file?: FileInfo) => void;
   setTotalPages: (total: number) => void;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 const FileViewerContext = React.createContext({} as FileViewerContextObserver);
@@ -111,6 +116,11 @@ const FileViewerContext = React.createContext({} as FileViewerContextObserver);
 export const useAnnotations = () => {
   const { annotations, setAnnotations } = useContext(FileViewerContext);
   return { annotations, setAnnotations };
+};
+
+export const useIsFileLoading = () => {
+  const { isLoading } = useContext(FileViewerContext);
+  return isLoading;
 };
 
 export const usePage = () => {
@@ -175,6 +185,7 @@ const FileViewerProvider = ({
     ProposedCogniteAnnotation | CogniteAnnotation | undefined
   >(undefined);
 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [file, setFile] = useState<FileInfo | undefined>(undefined);
@@ -199,6 +210,7 @@ const FileViewerProvider = ({
   useEffect(() => {
     (async () => {
       if (fileId && sdk && !disableAutoFetch) {
+        setIsLoading(true);
         const [fetchedFile] = await sdk.files.retrieve([{ id: fileId }], {
           ignoreUnknownIds: true,
         });
@@ -208,6 +220,7 @@ const FileViewerProvider = ({
           setAnnotations(annos);
         }
       }
+      setIsLoading(false);
     })();
   }, [sdk, fileId, disableAutoFetch]);
 
@@ -221,6 +234,8 @@ const FileViewerProvider = ({
     <FileViewerContext.Provider
       value={{
         sdk,
+        isLoading,
+        setIsLoading,
         annotations,
         setAnnotations,
         download,
