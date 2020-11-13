@@ -76,6 +76,10 @@ export type ViewerProps = {
     allowCustomAnnotations: boolean
   ) => IAnnotation<IRectShapeData>;
   /**
+   * Renders an always visible small draggable display connected to annotation with an arrow.
+   */
+  renderArrowPreview?: RenderItemPreviewFunction;
+  /**
    * Override how an annotation box is drawn on top of the file
    */
   renderItemPreview?: RenderItemPreviewFunction;
@@ -132,6 +136,7 @@ export const FileViewer = ({
   onAnnotationSelected,
   renderAnnotation = convertCogniteAnnotationToIAnnotation,
   annotations: annotationsFromProps,
+  renderArrowPreview, // TODO
 }: ViewerProps) => {
   const {
     annotations,
@@ -432,6 +437,7 @@ export const FileViewer = ({
         page={page}
         onLoading={(isLoading) => setLoading(isLoading)}
         renderItemPreview={renderItemPreview}
+        renderArrowPreview={renderArrowPreview}
         onPDFLoaded={async ({ pages }) => {
           setLoading(false);
           setTotalPages(pages);

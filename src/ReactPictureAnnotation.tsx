@@ -12,11 +12,14 @@ import styled from "styled-components";
 import { PDFPageProxy, PDFDocumentProxy } from "pdfjs-dist/types/display/api";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js`;
+import ArrowBox from "./ArrowBox";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdf-hub-bundles.cogniteapp.com/dependencies/pdfjs-dist@2.4.456/build/pdf.worker.min.js`;
 
 export type RenderItemPreviewFunction = (
   annotation: IAnnotation,
   height: React.CSSProperties["maxHeight"]
-) => React.ReactElement;
+) => React.ReactElement | undefined;
 
 export type DownloadFileFunction = (
   fileName: string,
@@ -50,6 +53,7 @@ interface IReactPictureAnnotationProps {
   creatable?: boolean;
   hoverable?: boolean;
   drawLabel: boolean;
+  renderArrowPreview?: any; // TODO type
   renderItemPreview?: RenderItemPreviewFunction;
   onAnnotationUpdate?: (annotation: IAnnotation) => void;
   onAnnotationCreate?: (annotation: IAnnotation) => void;
@@ -108,7 +112,10 @@ export class ReactPictureAnnotation extends React.Component<
 
   public state = {
     inputPosition: { left: 0, right: 0, maxHeight: 0 } as React.CSSProperties,
+    arrowPreviewPositions: {}, // TODO types
+    annotationsLoaded: false,
     showInput: false,
+    hideArrowPreview: true,
   };
   private currentAnnotationData: IAnnotation[] = [];
   private selectedIdTrueValue: string | null = null;
@@ -206,6 +213,12 @@ export class ReactPictureAnnotation extends React.Component<
 
     this.syncAnnotationData();
     this.syncSelectedId();
+    if (
+      this.props.annotationData &&
+      this.props.annotationData.length > 0 &&
+      !this.state.annotationsLoaded
+    )
+      this.loadArrowPreviews();
   };
 
   public componentWillUnmount = () => {
@@ -236,7 +249,7 @@ export class ReactPictureAnnotation extends React.Component<
   };
 
   public calculateShapePositionNoOffset = (
-    shapeData: IShapeBase
+    shapeData: IShapeBase // TODO rename that
   ): IShapeBase => {
     const { x, y, width, height } = shapeData;
     let scaledX = x;
@@ -276,10 +289,44 @@ export class ReactPictureAnnotation extends React.Component<
     };
   };
 
+  public loadArrowPreviews = () => {
+    const newArrowPreviewPositions = [];
+    for (const annotation in this.props.annotationData) {
+      newArrowPreviewPositions[this.props.annotationData[annotation].id] = {
+        x: 0,
+        y: 0,
+      };
+    }
+    this.setState({
+      annotationsLoaded: true,
+      arrowPreviewPositions: newArrowPreviewPositions,
+    });
+    this.onShapeChange();
+  };
+
+  public updateBoxPosition = (id: number, offsetX: number, offsetY: number) => {
+    if (this.props.renderArrowPreview) {
+      this.setState(
+        {
+          arrowPreviewPositions: {
+            ...this.state.arrowPreviewPositions,
+            [id]: {
+              ...this.state.arrowPreviewPositions[id],
+              offsetX,
+              offsetY,
+            },
+          },
+        },
+        () => this.onShapeChange()
+      );
+    }
+  };
+
   public render() {
     const {
       width,
       height,
+      annotationData,
       renderItemPreview = (annotation) => (
         <DefaultInputSection
           annotation={annotation}
@@ -287,8 +334,49 @@ export class ReactPictureAnnotation extends React.Component<
           onDelete={this.onDelete}
         />
       ),
+      renderArrowPreview,
     } = this.props;
-    const { showInput, inputPosition } = this.state;
+    const {
+      showInput,
+      inputPosition,
+      arrowPreviewPositions,
+      hideArrowPreview,
+    } = this.state;
+
+    const showArrowPreview = () =>
+      // @ts-ignore
+      annotationData?.map((annotation: any) => {
+        const position: any = arrowPreviewPositions[annotation.id];
+        const arrowBox = renderArrowPreview(annotation);
+        if (position && arrowBox) {
+          return (
+            // @ts-ignore
+            <StyledArrowBox
+              key={`arrow-box-${annotation.id}`}
+              annotation={annotation}
+              position={position}
+              renderedArrowWithBox={arrowBox}
+              updateBoxPosition={this.updateBoxPosition}
+            />
+          );
+        }
+      });
+
+    const showPreview = (selectedItem: any) => (
+      <div
+        className="rp-selected-input"
+        style={inputPosition}
+        onMouseEnter={() => {
+          this.selectedId = this.selectedItem!.id;
+          if (!this.props.hoverable) {
+            this.currentAnnotationState.onMouseUp();
+          }
+        }}
+      >
+        {renderItemPreview(selectedItem, inputPosition.maxHeight)}
+      </div>
+    );
+
     return (
       <Wrapper>
         <canvas
@@ -312,20 +400,11 @@ export class ReactPictureAnnotation extends React.Component<
           onTouchEnd={this.onTouchEnd}
           onTouchMove={this.onTouchMove}
         />
-        {showInput && this.selectedItem && (
-          <div
-            className="rp-selected-input"
-            style={inputPosition}
-            onMouseEnter={() => {
-              this.selectedId = this.selectedItem!.id;
-              if (!this.props.hoverable) {
-                this.currentAnnotationState.onMouseUp();
-              }
-            }}
-          >
-            {renderItemPreview(this.selectedItem, inputPosition.maxHeight)}
-          </div>
-        )}
+        {this.selectedItem && showInput && showPreview(this.selectedItem)}
+        {renderArrowPreview &&
+          annotationData &&
+          !hideArrowPreview &&
+          showArrowPreview()}
       </Wrapper>
     );
   }
@@ -350,7 +429,8 @@ export class ReactPictureAnnotation extends React.Component<
       }
 
       for (const item of this.shapes) {
-        const isSelected = item.getAnnotationData().id === this.selectedId;
+        const itemId = item.getAnnotationData().id;
+        const isSelected = itemId === this.selectedId;
         const { scale } = this.scaleState;
         const { x, y, height, width } = item.paint(
           this.canvas2D,
@@ -361,10 +441,23 @@ export class ReactPictureAnnotation extends React.Component<
           false
         );
 
+        if (this.props.renderArrowPreview) {
+          this.setState({
+            arrowPreviewPositions: {
+              ...this.state.arrowPreviewPositions,
+              [itemId]: {
+                ...this.state.arrowPreviewPositions[itemId],
+                x,
+                y,
+              },
+            },
+          });
+        }
+
         if (isSelected) {
           if (
             !this.currentTransformer ||
-            this.currentTransformer.id !== item.getAnnotationData().id
+            this.currentTransformer.id !== itemId
           ) {
             this.currentTransformer = new Transformer(
               item,
@@ -387,30 +480,27 @@ export class ReactPictureAnnotation extends React.Component<
 
           const { strokeWidth = 4 } = item.getAnnotationData().mark;
           const margin = strokeWidth + 10;
-
-          this.setState({
-            showInput: true,
-            inputPosition: {
-              ...(leftOfMiddle
-                ? { left: x }
-                : { right: containerWidth - (x + width) }),
-              // ...(leftOfMiddle?{paddingLeft: margin}:{paddingRight:margin}),
-              ...(topOfMiddle
-                ? { top: y + height + strokeWidth }
-                : { bottom: -y + strokeWidth }),
-              ...(topOfMiddle
-                ? { paddingTop: margin }
-                : { paddingBottom: margin }),
-              ...(topOfMiddle && {
-                maxHeight: `calc(${this.props.height}px - ${
-                  y + height + 2 * margin
-                }px)`,
-              }),
-              ...(!topOfMiddle && { maxHeight: `calc(${y - 2 * margin}px)` }),
-              overflow: "visible",
-              zIndex: 1000,
-            },
-          });
+          const inputPosition = {
+            ...(leftOfMiddle
+              ? { left: x }
+              : { right: containerWidth - (x + width) }),
+            // ...(leftOfMiddle?{paddingLeft: margin}:{paddingRight:margin}),
+            ...(topOfMiddle
+              ? { top: y + height + strokeWidth }
+              : { bottom: -y + strokeWidth }),
+            ...(topOfMiddle
+              ? { paddingTop: margin }
+              : { paddingBottom: margin }),
+            ...(topOfMiddle && {
+              maxHeight: `calc(${this.props.height}px - ${
+                y + height + 2 * margin
+              }px)`,
+            }),
+            ...(!topOfMiddle && { maxHeight: `calc(${y - 2 * margin}px)` }),
+            overflow: "visible",
+            zIndex: 1000,
+          };
+          this.setState({ showInput: true, inputPosition });
         }
       }
 
@@ -444,11 +534,12 @@ export class ReactPictureAnnotation extends React.Component<
       );
     }
 
-    this.setState({ imageScale: this.scaleState });
+    this.setState({ imageScale: this.scaleState, hideArrowPreview: true });
 
     requestAnimationFrame(() => {
       this.onShapeChange();
       this.onImageChange();
+      this.setState({ hideArrowPreview: false });
     });
   };
 
@@ -465,11 +556,12 @@ export class ReactPictureAnnotation extends React.Component<
       );
     }
 
-    this.setState({ imageScale: this.scaleState });
+    this.setState({ imageScale: this.scaleState, hideArrowPreview: true });
 
     requestAnimationFrame(() => {
       this.onShapeChange();
       this.onImageChange();
+      this.setState({ hideArrowPreview: false });
     });
   };
 
@@ -479,6 +571,7 @@ export class ReactPictureAnnotation extends React.Component<
       this.currentImageElement || document.createElement("img");
     nextImageNode.crossOrigin = "anonymous";
     const loadProperDimentions = () => {
+      this.setState({ hideArrowPreview: true });
       const { width, height } = nextImageNode;
       const imageNodeRatio = height / width;
       const { width: canvasWidth, height: canvasHeight } = this.props;
@@ -502,6 +595,7 @@ export class ReactPictureAnnotation extends React.Component<
       }
       this.onImageChange();
       this.onShapeChange();
+      this.setState({ hideArrowPreview: false });
     };
     if (this.currentImageElement) {
       loadProperDimentions();
@@ -901,7 +995,7 @@ export class ReactPictureAnnotation extends React.Component<
       this.scaleState.originY =
         this.startDrag.originY + (offsetY - this.startDrag.y);
 
-      this.setState({ imageScale: this.scaleState });
+      this.setState({ imageScale: this.scaleState, hideArrowPreview: true });
 
       requestAnimationFrame(() => {
         this.onShapeChange();
@@ -913,6 +1007,7 @@ export class ReactPictureAnnotation extends React.Component<
   private onMouseUp: MouseEventHandler<HTMLCanvasElement> = () => {
     this.currentAnnotationState.onMouseUp();
     this.startDrag = undefined;
+    this.setState({ hideArrowPreview: false });
   };
 
   private onTouchStart: TouchEventHandler<HTMLCanvasElement> = (event) => {
@@ -946,6 +1041,7 @@ export class ReactPictureAnnotation extends React.Component<
       clientX,
       clientY
     );
+    this.setState({ hideArrowPreview: true });
     if (editable) {
       this.currentAnnotationState.onMouseMove(positionX, positionY);
     } else {
@@ -976,6 +1072,7 @@ export class ReactPictureAnnotation extends React.Component<
   private onTouchEnd: TouchEventHandler<HTMLCanvasElement> = () => {
     this.currentAnnotationState.onMouseUp();
     this.startDrag = undefined;
+    this.setState({ hideArrowPreview: false });
   };
 
   private handlePinchChange = (touches: React.TouchList) => {
@@ -1015,6 +1112,7 @@ export class ReactPictureAnnotation extends React.Component<
   private onWheel = (event: WheelEvent) => {
     event.preventDefault();
     event.stopPropagation();
+    this.setState({ hideArrowPreview: true });
     // https://stackoverflow.com/a/31133823/9071503
     // const { clientHeight, scrollTop, scrollHeight,ctrlKey } = event;
     // if (clientHeight + scrollTop + event.deltaY > scrollHeight) {
@@ -1056,6 +1154,7 @@ export class ReactPictureAnnotation extends React.Component<
     requestAnimationFrame(() => {
       this.onShapeChange();
       this.onImageChange();
+      this.setState({ hideArrowPreview: false });
     });
   };
 
@@ -1104,11 +1203,20 @@ const tryCancelEvent = (event: React.TouchEvent) => {
   return true;
 };
 
+const StyledArrowBox = styled(ArrowBox)`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+`;
+
 const Wrapper = styled.div`
-  position: relative;
+  position: absolute;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial,
     sans-serif;
+  width: 100%;
+  height: 100%;
 
   .rp-image {
     position: absolute;
