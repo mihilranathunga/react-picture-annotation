@@ -353,6 +353,28 @@ export const Playground = () => {
       hoverable={boolean("Hoverable", false)}
       pagination={select("Pagination", ["small", "normal", false], "normal")}
       onAnnotationSelected={action("onAnnotationSelected")}
+      renderItemPreview={() => (
+        <div
+          style={{
+            backgroundColor: "white",
+            border: "1px solid black",
+            padding: "5px",
+          }}
+        >
+          <ul style={{ margin: 0, padding: 0, listStyleType: "none" }}>
+            <li>test</li>
+            <li>test</li>
+            <li>test</li>
+            <li>test</li>
+            <li>test</li>
+            <li>test</li>
+            <li>test</li>
+            <li>test</li>
+            <li>test</li>
+            <li>test</li>
+          </ul>
+        </div>
+      )}
     />
   );
 };
