@@ -489,7 +489,7 @@ export class ReactPictureAnnotation extends React.Component<
             // ...(leftOfMiddle?{paddingLeft: margin}:{paddingRight:margin}),
             ...(topOfMiddle
               ? { top: y + height + strokeWidth }
-              : { bottom: -y + strokeWidth }),
+              : { bottom: -y + containerHeight + strokeWidth }),
             ...(topOfMiddle
               ? { paddingTop: margin }
               : { paddingBottom: margin }),
