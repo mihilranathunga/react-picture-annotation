@@ -5,7 +5,7 @@ import { CogniteFileViewer, ViewerEditCallbacks } from "../src";
 import {
   imgSdk,
   imgFile,
-  imgSdkTwoAnnotations,
+  imgSdkThreeAnnotations,
   pdfFile,
   pdfSdk,
 } from "./utils";
@@ -219,11 +219,42 @@ export const CustomizedAnnotations = () => {
         canvas.fill();
       },
     },
+    {
+      draw: (
+        canvas: CanvasRenderingContext2D,
+        x: number,
+        y: number,
+        width: number,
+        height: number
+      ) => {
+        const radius = 10;
+        canvas.beginPath();
+        canvas.lineWidth = 4;
+        canvas.shadowBlur = 10;
+        canvas.shadowColor = "#000033";
+        canvas.fillStyle = "#0000ff";
+        canvas.lineTo(x + width - radius, y);
+        canvas.quadraticCurveTo(x + width, y, x + width, y + radius);
+        canvas.lineTo(x + width, y + height - radius);
+        canvas.quadraticCurveTo(
+          x + width,
+          y + height,
+          x + width - radius,
+          y + height
+        );
+        canvas.lineTo(x + radius, y + height);
+        canvas.quadraticCurveTo(x, y + height, x, y + height - radius);
+        canvas.lineTo(x, y + radius);
+        canvas.quadraticCurveTo(x, y, x + radius, y);
+        canvas.stroke();
+        canvas.fill();
+      },
+    },
   ];
   useEffect(() => {
     (async () => {
       const rawAnnotations = await listAnnotationsForFile(
-        imgSdkTwoAnnotations,
+        imgSdkThreeAnnotations,
         imgFile
       );
       const customizedAnnotations = rawAnnotations.map(

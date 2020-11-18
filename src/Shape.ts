@@ -1,16 +1,16 @@
-import { IAnnotation } from './Annotation';
+import { IAnnotation } from "./Annotation";
 
 export const shapeStyle = {
   padding: 5,
   margin: 10,
   fontSize: 12,
-  fontColor: '#212529',
-  fontBackground: '#f8f9fa',
+  fontColor: "#212529",
+  fontBackground: "#f8f9fa",
   fontFamily:
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', Helvetica, Arial, sans-serif",
-  shapeBackground: 'hsla(210, 16%, 93%, 0.2)',
-  shapeStrokeStyle: 'ff0000',
-  shapeShadowStyle: 'hsla(210, 9%, 31%, 0.35)',
+  shapeBackground: "hsla(210, 16%, 93%, 0.2)",
+  shapeStrokeStyle: "ff0000",
+  shapeShadowStyle: "hsla(210, 9%, 31%, 0.35)",
 };
 
 export interface IShapeBase {
@@ -37,10 +37,11 @@ export interface IShapeAdjustBase extends Partial<IShapeBase> {}
 
 export interface IShapeData extends IShapeBase {
   type: string;
+  highlight?: boolean;
 }
 
 export interface IRectShapeData extends IShapeData {
-  type: 'RECT';
+  type: "RECT";
 }
 
 export interface IShape {
@@ -161,6 +162,7 @@ export class RectShape implements IShape {
         isDownload
       );
     } else {
+      const padding = 5;
       canvas2D.shadowBlur = 10;
       canvas2D.shadowColor = mark.shadowColor || shapeStyle.shapeShadowStyle;
       canvas2D.strokeStyle = mark.strokeColor || shapeStyle.shapeStrokeStyle;
@@ -168,27 +170,51 @@ export class RectShape implements IShape {
       if (mark.backgroundColor) {
         canvas2D.fillStyle = mark.backgroundColor;
         canvas2D.fillRect(
-          x - canvas2D.lineWidth / 2,
-          y - canvas2D.lineWidth / 2,
-          width + canvas2D.lineWidth,
-          height + canvas2D.lineWidth
+          mark.highlight
+            ? x - canvas2D.lineWidth / 2 - padding
+            : x - canvas2D.lineWidth / 2,
+          mark.highlight
+            ? y - canvas2D.lineWidth / 2 - padding
+            : y - canvas2D.lineWidth / 2,
+          mark.highlight
+            ? width + canvas2D.lineWidth + padding * 2
+            : width + canvas2D.lineWidth,
+          mark.highlight
+            ? height + canvas2D.lineWidth + padding * 2
+            : height + canvas2D.lineWidth
         );
       }
       if (mark.strokeWidth !== 0) {
         canvas2D.strokeRect(
-          x - canvas2D.lineWidth / 2,
-          y - canvas2D.lineWidth / 2,
-          width + canvas2D.lineWidth,
-          height + canvas2D.lineWidth
+          mark.highlight
+            ? x - canvas2D.lineWidth / 2 - padding
+            : x - canvas2D.lineWidth / 2,
+          mark.highlight
+            ? y - canvas2D.lineWidth / 2 - padding
+            : y - canvas2D.lineWidth / 2,
+          mark.highlight
+            ? width + canvas2D.lineWidth + padding * 2
+            : width + canvas2D.lineWidth,
+          mark.highlight
+            ? height + canvas2D.lineWidth + padding * 2
+            : height + canvas2D.lineWidth
         );
       }
       if (selected) {
         canvas2D.fillStyle = mark.backgroundColor || shapeStyle.shapeBackground;
         canvas2D.fillRect(
-          x - canvas2D.lineWidth / 2,
-          y - canvas2D.lineWidth / 2,
-          width + canvas2D.lineWidth,
-          height + canvas2D.lineWidth
+          mark.highlight
+            ? x - canvas2D.lineWidth / 2 - padding
+            : x - canvas2D.lineWidth / 2,
+          mark.highlight
+            ? y - canvas2D.lineWidth / 2 - padding
+            : y - canvas2D.lineWidth / 2,
+          mark.highlight
+            ? width + canvas2D.lineWidth + padding * 2
+            : width + canvas2D.lineWidth,
+          mark.highlight
+            ? height + canvas2D.lineWidth + padding * 2
+            : height + canvas2D.lineWidth
         );
       } else {
         const { comment } = this.annotationData;
@@ -202,7 +228,7 @@ export class RectShape implements IShape {
             metrics.width + shapeStyle.padding * 2,
             shapeStyle.fontSize + shapeStyle.padding * 2
           );
-          canvas2D.textBaseline = 'top';
+          canvas2D.textBaseline = "top";
           canvas2D.fillStyle = shapeStyle.fontColor;
           canvas2D.fillText(
             comment,
