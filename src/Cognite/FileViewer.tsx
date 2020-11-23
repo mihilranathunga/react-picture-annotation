@@ -301,6 +301,9 @@ export const FileViewer = ({
   const onAnnotationSelect = (id: string | null) => {
     if (id === null) {
       setSelectedAnnotation(undefined);
+      if (onAnnotationSelected) {
+        onAnnotationSelected(undefined);
+      }
     }
     const annotation = annotations.find((el) => `${el.id}` === `${id}`);
     if (annotation) {
