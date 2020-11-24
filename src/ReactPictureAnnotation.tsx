@@ -13,7 +13,7 @@ import Transformer, { ITransformer } from "./Transformer";
 import styled from "styled-components";
 import { PDFPageProxy, PDFDocumentProxy } from "pdfjs-dist/types/display/api";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js`;
 import ArrowBox from "./ArrowBox";
 
 export type RenderItemPreviewFunction = (
@@ -76,9 +76,7 @@ const defaultState: IStageState = {
   originY: 0,
 };
 
-export class ReactPictureAnnotation extends React.Component<
-  IReactPictureAnnotationProps
-> {
+export class ReactPictureAnnotation extends React.Component<IReactPictureAnnotationProps> {
   set selectedId(value: string | null) {
     const { onSelect } = this.props;
     if (this.selectedIdTrueValue !== value) {
