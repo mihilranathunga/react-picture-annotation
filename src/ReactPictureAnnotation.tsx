@@ -1,5 +1,5 @@
 import React, { MouseEventHandler, TouchEventHandler } from "react";
-import * as pdfjs from "pdfjs-dist";
+import * as pdfjs from "pdfjs-dist/es5/build/pdf";
 import { PDFDocument, rgb, PDFPage, degrees } from "pdf-lib";
 import parseColor from "parse-color";
 import { isEqual } from "lodash";
@@ -13,7 +13,7 @@ import Transformer, { ITransformer } from "./Transformer";
 import styled from "styled-components";
 import { PDFPageProxy, PDFDocumentProxy } from "pdfjs-dist/types/display/api";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@2.6.347/es5/build/pdf.worker.min.js`;
 import ArrowBox from "./ArrowBox";
 
 export type RenderItemPreviewFunction = (
@@ -76,7 +76,9 @@ const defaultState: IStageState = {
   originY: 0,
 };
 
-export class ReactPictureAnnotation extends React.Component<IReactPictureAnnotationProps> {
+export class ReactPictureAnnotation extends React.Component<
+  IReactPictureAnnotationProps
+> {
   set selectedId(value: string | null) {
     const { onSelect } = this.props;
     if (this.selectedIdTrueValue !== value) {
@@ -144,7 +146,7 @@ export class ReactPictureAnnotation extends React.Component<IReactPictureAnnotat
       try {
         this._PDF_DOC = await pdfjs.getDocument({ url: this.props.pdf })
           .promise;
-        if (this.props.onPDFLoaded) {
+        if (this.props.onPDFLoaded && this._PDF_DOC) {
           this.props.onPDFLoaded({ pages: this._PDF_DOC.numPages });
         }
       } catch (e) {
@@ -191,11 +193,11 @@ export class ReactPictureAnnotation extends React.Component<IReactPictureAnnotat
       if (pdf) {
         try {
           this._PDF_DOC = await pdfjs.getDocument({ url: pdf }).promise;
-          if (this.props.onPDFLoaded) {
+          if (this.props.onPDFLoaded && this._PDF_DOC) {
             this.props.onPDFLoaded({ pages: this._PDF_DOC.numPages });
           }
         } catch (e) {
-          if (this.props.onPDFFailure) {
+          if (this.props.onPDFFailure && this._PDF_DOC) {
             this.props.onPDFFailure({ url: "", error: e });
           }
         }
